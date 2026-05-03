@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AtlasVow 环球良缘</title>
+    <meta
+      name="description"
+      content="AtlasVow 环球良缘，为认真关系提供跨国婚恋匹配、身份核验、文化沟通与定居规划。"
+    />
+    <link rel="preconnect" href="https://images.unsplash.com" />
+    <link rel="preconnect" href="https://unpkg.com" />
+    <script>
+      try {
+        document.documentElement.dataset.theme =
+          localStorage.getItem("atlasvowTheme") || "default";
+      } catch (error) {
+        document.documentElement.dataset.theme = "default";
+      }
+    </script>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#match">
+        <span class="brand-mark">AV</span>
+        <span>
+          <strong>AtlasVow</strong>
+          <small>环球良缘</small>
+        </span>
+      </a>
+      <nav class="top-nav" aria-label="主导航">
+        <a href="#match">匹配</a>
+        <a href="#members">会员</a>
+        <a href="#trust">安全</a>
+        <a href="#stories">故事</a>
+      </nav>
+      <div class="header-controls">
+        <label class="theme-picker" aria-label="切换网站皮肤">
+          <i data-lucide="palette"></i>
+          <select id="themeSelect">
+            <option value="default">青绿</option>
+            <option value="pink">粉色</option>
+            <option value="ocean">深海</option>
+          </select>
+        </label>
+        <a class="header-action" href="#consult">
+          <i data-lucide="calendar-check"></i>
+          预约顾问
+        </a>
+      </div>
+    </header>
+
+    <main>
+      <section id="match" class="match-workbench" aria-labelledby="matchTitle">
+        <aside class="filter-panel" aria-label="匹配筛选">
+          <div class="panel-heading">
+            <p class="eyebrow">International Match Desk</p>
+            <h1 id="matchTitle">跨国婚恋匹配台</h1>
+            <p>
+              为计划建立长期关系的单身人士，整合身份核验、语言沟通、文化适配与未来居住地评估。
+            </p>
+          </div>
+
+          <form class="filter-form" id="filterForm">
+            <label>
+              <span>我来自</span>
+              <select id="homeFilter" name="home">
+                <option value="all">不限地区</option>
+                <option value="中国">中国</option>
+                <option value="美国">美国</option>
+                <option value="加拿大">加拿大</option>
+                <option value="澳大利亚">澳大利亚</option>
+              </select>
+            </label>
+
+            <label>
+              <span>希望对方所在国家</span>
+              <select id="countryFilter" name="country">
+                <option value="all">不限国家</option>
+                <option value="美国">美国</option>
+                <option value="加拿大">加拿大</option>
+                <option value="英国">英国</option>
+                <option value="法国">法国</option>
+                <option value="德国">德国</option>
+                <option value="澳大利亚">澳大利亚</option>
+                <option value="日本">日本</option>
+              </select>
+            </label>
+
+            <label>
+              <span>沟通语言</span>
+              <select id="languageFilter" name="language">
+                <option value="all">不限语言</option>
+                <option value="中文">中文</option>
+                <option value="英文">英文</option>
+                <option value="法文">法文</option>
+                <option value="德文">德文</option>
+                <option value="日文">日文</option>
+              </select>
+            </label>
+
+            <label>
+              <span>关系目标</span>
+              <select id="intentFilter" name="intent">
+                <option value="all">不限目标</option>
+                <option value="结婚">结婚</option>
+                <option value="稳定交往">稳定交往</option>
+                <option value="先了解">先了解</option>
+              </select>
+            </label>
+
+            <label class="range-label">
+              <span>最大年龄 <strong id="ageValue">42</strong></span>
+              <input id="ageRange" type="range" min="24" max="99" value="42" />
+            </label>
+
+            <label class="check-row">
+              <input id="verifiedFilter" type="checkbox" />
+              <span>只看已完成视频与证件核验</span>
+            </label>
+          </form>
+
+          <div class="metric-grid">
+            <div>
+              <strong>38</strong>
+              <span>国家与地区</span>
+            </div>
+            <div>
+              <strong>92%</strong>
+              <span>资料完整度门槛</span>
+            </div>
+          </div>
+        </aside>
+
+        <section id="members" class="members-panel" aria-labelledby="membersTitle">
+          <div class="members-toolbar">
+            <div>
+              <p class="eyebrow">Curated Members</p>
+              <h2 id="membersTitle">精选会员</h2>
+            </div>
+            <label class="search-box">
+              <i data-lucide="search"></i>
+              <input id="searchInput" type="search" placeholder="搜索国家、城市、标签" />
+            </label>
+          </div>
+
+          <div class="segmented-control" role="tablist" aria-label="会员视图">
+            <button class="is-active" type="button" data-mode="featured">精选</button>
+            <button type="button" data-mode="new">新上线</button>
+            <button type="button" data-mode="verified">已核验</button>
+          </div>
+
+          <div class="result-line">
+            <span id="resultCount">0 位会员</span>
+            <span>按文化适配、沟通意愿与未来规划综合排序</span>
+          </div>
+
+          <div class="profile-grid" id="profileGrid" aria-live="polite"></div>
+        </section>
+
+        <aside class="concierge-panel" aria-label="顾问服务">
+          <div class="advisor-card">
+            <div class="advisor-photo">
+              <img
+                src="https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=800&q=80"
+                alt="婚恋顾问正在进行视频咨询"
+              />
+            </div>
+            <div>
+              <p class="eyebrow">Concierge</p>
+              <h2>一对一顾问</h2>
+              <p>
+                顾问会在匹配前确认身份、婚恋状态、跨文化沟通偏好与定居时间线。
+              </p>
+            </div>
+          </div>
+
+          <div class="agenda-card">
+            <h3>本周匹配流程</h3>
+            <ol>
+              <li>
+                <span>01</span>
+                <p>资料核验与视频面谈</p>
+              </li>
+              <li>
+                <span>02</span>
+                <p>文化与语言适配评分</p>
+              </li>
+              <li>
+                <span>03</span>
+                <p>三位候选人私密介绍</p>
+              </li>
+            </ol>
+          </div>
+
+          <form id="consult" class="consult-form">
+            <h3>预约初谈</h3>
+            <label>
+              <span>称呼</span>
+              <input type="text" name="name" placeholder="你的称呼" required />
+            </label>
+            <label>
+              <span>联系方式</span>
+              <input type="text" name="contact" placeholder="邮箱或手机" required />
+            </label>
+            <label>
+              <span>感兴趣会员</span>
+              <input id="selectedMember" type="text" name="member" placeholder="可从会员卡选择" />
+            </label>
+            <button type="submit">
+              <i data-lucide="send"></i>
+              提交预约
+            </button>
+            <p id="formMessage" class="form-message" role="status"></p>
+          </form>
+        </aside>
+      </section>
+
+      <section id="trust" class="trust-section" aria-labelledby="trustTitle">
+        <div class="section-heading">
+          <p class="eyebrow">Verified Journey</p>
+          <h2 id="trustTitle">安全与认真关系优先</h2>
+        </div>
+        <div class="trust-grid">
+          <article>
+            <i data-lucide="badge-check"></i>
+            <h3>身份核验</h3>
+            <p>证件、视频、婚恋状态与社交资料交叉确认，异常资料进入人工复核。</p>
+          </article>
+          <article>
+            <i data-lucide="languages"></i>
+            <h3>沟通支持</h3>
+            <p>跨时区约见、双语开场、文化误解提醒与关系节奏记录同步给顾问。</p>
+          </article>
+          <article>
+            <i data-lucide="map"></i>
+            <h3>未来规划</h3>
+            <p>围绕居住城市、职业安排、家庭期待和探访频率整理现实可行的路线。</p>
+          </article>
+          <article>
+            <i data-lucide="lock-keyhole"></i>
+            <h3>隐私边界</h3>
+            <p>照片、联系方式与敏感资料分级展示，双方确认后才开放下一层信息。</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="stories" class="stories-section" aria-labelledby="storiesTitle">
+        <div class="section-heading">
+          <p class="eyebrow">Real Outcomes</p>
+          <h2 id="storiesTitle">跨文化关系样本</h2>
+        </div>
+        <div class="story-layout">
+          <article>
+            <img
+              src="https://images.unsplash.com/photo-1529634806980-85c3dd6d34ac?auto=format&fit=crop&w=900&q=80"
+              alt="跨国伴侣在城市街区散步"
+            />
+            <div>
+              <span>上海与温哥华</span>
+              <h3>从双语视频到共同城市计划</h3>
+              <p>
+                两人在第三次视频后确认长期目标，顾问协助梳理探访安排、父母沟通和工作迁移窗口。
+              </p>
+            </div>
+          </article>
+          <article>
+            <img
+              src="https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=900&q=80"
+              alt="伴侣在海边交谈"
+            />
+            <div>
+              <span>北京与悉尼</span>
+              <h3>把生活细节提前讲清楚</h3>
+              <p>
+                匹配报告聚焦家庭边界、财务观念和未来居住地，减少了跨文化交往中的猜测。
+              </p>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <dialog class="profile-dialog" id="profileDialog" aria-labelledby="dialogName">
+      <button class="dialog-close" type="button" aria-label="关闭">
+        <i data-lucide="x"></i>
+      </button>
+      <div id="dialogContent"></div>
+    </dialog>
+
+    <footer class="site-footer">
+      <p>AtlasVow 环球良缘</p>
+      <nav aria-label="页脚导航">
+        <a href="#match">匹配台</a>
+        <a href="#trust">安全体系</a>
+        <a href="#consult">预约初谈</a>
+      </nav>
+    </footer>
+
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
