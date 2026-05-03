@@ -209,6 +209,7 @@ const dialogContent = document.querySelector("#dialogContent");
 const selectedMember = document.querySelector("#selectedMember");
 const formMessage = document.querySelector("#formMessage");
 const themeSelect = document.querySelector("#themeSelect");
+const defaultTheme = "pink";
 const availableThemes = new Set(["default", "pink", "ocean"]);
 
 const controls = {
@@ -225,7 +226,7 @@ function persistSaved() {
 }
 
 function applyTheme(theme, shouldPersist = true) {
-  const nextTheme = availableThemes.has(theme) ? theme : "default";
+  const nextTheme = availableThemes.has(theme) ? theme : defaultTheme;
   document.documentElement.dataset.theme = nextTheme;
   themeSelect.value = nextTheme;
 

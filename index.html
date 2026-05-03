@@ -11,12 +11,16 @@
     <link rel="preconnect" href="https://images.unsplash.com" />
     <link rel="preconnect" href="https://unpkg.com" />
     <script>
-      try {
-        document.documentElement.dataset.theme =
-          localStorage.getItem("atlasvowTheme") || "default";
-      } catch (error) {
-        document.documentElement.dataset.theme = "default";
-      }
+      (() => {
+        try {
+          const savedTheme = localStorage.getItem("atlasvowTheme");
+          const availableThemes = ["default", "pink", "ocean"];
+          document.documentElement.dataset.theme =
+            availableThemes.includes(savedTheme) ? savedTheme : "pink";
+        } catch (error) {
+          document.documentElement.dataset.theme = "pink";
+        }
+      })();
     </script>
     <link rel="stylesheet" href="styles.css" />
   </head>
@@ -40,7 +44,7 @@
           <i data-lucide="palette"></i>
           <select id="themeSelect">
             <option value="default">青绿</option>
-            <option value="pink">粉色</option>
+            <option value="pink" selected>粉色</option>
             <option value="ocean">深海</option>
           </select>
         </label>
