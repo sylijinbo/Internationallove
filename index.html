@@ -41,7 +41,15 @@
       </nav>
       <div class="header-controls">
         <label class="theme-picker" aria-label="切换网站皮肤">
-          <i data-lucide="palette"></i>
+          <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24">
+            <circle cx="13.5" cy="6.5" r="0.5" fill="currentColor"></circle>
+            <circle cx="17.5" cy="10.5" r="0.5" fill="currentColor"></circle>
+            <circle cx="8.5" cy="7.5" r="0.5" fill="currentColor"></circle>
+            <circle cx="6.5" cy="12.5" r="0.5" fill="currentColor"></circle>
+            <path
+              d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.5-.7 1.5-1.5 0-.4-.2-.8-.4-1.1-.3-.4-.5-.8-.5-1.3 0-1.1.9-2 2-2h1.9c3 0 5.5-2.5 5.5-5.5C22 5.9 17.5 2 12 2z"
+            ></path>
+          </svg>
           <select id="themeSelect">
             <option value="default">青绿</option>
             <option value="pink" selected>粉色</option>
@@ -49,7 +57,13 @@
           </select>
         </label>
         <a class="header-action" href="#consult">
-          <i data-lucide="calendar-check"></i>
+          <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24">
+            <path d="M8 2v4"></path>
+            <path d="M16 2v4"></path>
+            <rect width="18" height="18" x="3" y="4" rx="2"></rect>
+            <path d="M3 10h18"></path>
+            <path d="m9 16 2 2 4-4"></path>
+          </svg>
           预约顾问
         </a>
       </div>
@@ -144,7 +158,10 @@
               <h2 id="membersTitle">精选会员</h2>
             </div>
             <label class="search-box">
-              <i data-lucide="search"></i>
+              <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.3-4.3"></path>
+              </svg>
               <input id="searchInput" type="search" placeholder="搜索国家、城市、标签" />
             </label>
           </div>
