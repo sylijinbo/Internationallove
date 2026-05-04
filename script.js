@@ -211,6 +211,10 @@ const formMessage = document.querySelector("#formMessage");
 const themeSelect = document.querySelector("#themeSelect");
 const defaultTheme = "pink";
 const availableThemes = new Set(["default", "pink", "ocean"]);
+const supabaseConfig = {
+  url: "https://hgglkxizcwazqenqmfrm.supabase.co",
+  publishableKey: "sb_publishable_dEZ6qglLvXD_BvMQ09aTQw_oaOi5ZU1",
+};
 
 const controls = {
   home: document.querySelector("#homeFilter"),
@@ -223,6 +227,33 @@ const controls = {
 
 function persistSaved() {
   writeStorage("atlasvowSaved", JSON.stringify([...state.saved]));
+}
+
+async function createAppointment(payload) {
+  const response = await fetch(`${supabaseConfig.url}/rest/v1/appointments`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: supabaseConfig.publishableKey,
+      Authorization: `Bearer ${supabaseConfig.publishableKey}`,
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    let message = "Appointment request failed.";
+
+    try {
+      const details = await response.json();
+      message = details.message || details.error || message;
+    } catch (error) {
+      const text = await response.text();
+      message = text || message;
+    }
+
+    throw new Error(message);
+  }
 }
 
 function applyTheme(theme, shouldPersist = true) {
@@ -481,12 +512,45 @@ dialog.addEventListener("click", (event) => {
   }
 });
 
-document.querySelector("#consult").addEventListener("submit", (event) => {
+document.querySelector("#consult").addEventListener("submit", async (event) => {
   event.preventDefault();
-  const data = new FormData(event.currentTarget);
-  const name = data.get("name").trim();
-  formMessage.textContent = `${name}，预约信息已记录，顾问将在一个工作日内联系你。`;
-  event.currentTarget.reset();
+  const form = event.currentTarget;
+  const submitButton = form.querySelector("button[type='submit']");
+  const data = new FormData(form);
+  const name = String(data.get("name") || "").trim();
+  const contact = String(data.get("contact") || "").trim();
+  const member = String(data.get("member") || "").trim();
+
+  if (!name || !contact) {
+    formMessage.textContent = "请填写称呼和联系方式。";
+    return;
+  }
+
+  submitButton.disabled = true;
+  submitButton.setAttribute("aria-busy", "true");
+  formMessage.textContent = "正在提交预约...";
+
+  try {
+    await createAppointment({
+      customer_name: name,
+      contact,
+      interested_member: member || null,
+      source_url: window.location.href,
+      user_agent: navigator.userAgent,
+      form_payload: {
+        interested_member: member || null,
+      },
+    });
+
+    formMessage.textContent = `${name}，预约信息已记录，顾问将在一个工作日内联系你。`;
+    form.reset();
+  } catch (error) {
+    console.error(error);
+    formMessage.textContent = "预约暂时没有提交成功，请稍后再试。";
+  } finally {
+    submitButton.disabled = false;
+    submitButton.removeAttribute("aria-busy");
+  }
 });
 
 window.addEventListener("load", () => {

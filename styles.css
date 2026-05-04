@@ -271,6 +271,16 @@ button {
   background: var(--teal-dark);
 }
 
+.consult-form button:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
+  box-shadow: none;
+}
+
+.consult-form button:disabled:hover {
+  background: var(--teal);
+}
+
 .header-action svg,
 .consult-form button svg,
 .profile-actions button svg,
