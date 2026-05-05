@@ -50,6 +50,14 @@ const supabaseConfig = {
   publishableKey: "sb_publishable_dEZ6qglLvXD_BvMQ09aTQw_oaOi5ZU1",
 };
 const memberPhotoBucket = "member-photos";
+const autoQuoteTemplates = [
+  "希望认识重视家庭与长期关系、愿意认真沟通未来生活安排的伴侣。",
+  "期待一段真诚稳定的关系，在彼此尊重中一起规划未来。",
+  "重视家庭、沟通和责任感，希望遇见愿意认真经营关系的人。",
+  "欣赏温和真诚的相处方式，也愿意为长期承诺投入时间。",
+  "希望和价值观相近的人慢慢了解，建立踏实而稳定的生活。",
+  "相信好的关系来自坦诚沟通，也期待一起创造温暖的家庭。",
+];
 const memberSelectFields = [
   "id",
   "slug",
@@ -110,6 +118,40 @@ function normalizeArray(value) {
   return Array.isArray(value) ? value.filter(Boolean) : [];
 }
 
+function uniqueValues(values) {
+  const seen = new Set();
+  return values
+    .map((value) => String(value || "").trim())
+    .filter(Boolean)
+    .filter((value) => {
+      const key = value.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
+
+function buildAutoTags(profile) {
+  return uniqueValues([
+    profile.education,
+    profile.occupation,
+    profile.faith,
+    profile.smoking,
+    profile.housing,
+  ]).slice(0, 4);
+}
+
+function hashString(value) {
+  return String(value || "").split("").reduce((hash, character) => {
+    return (hash * 31 + character.charCodeAt(0)) >>> 0;
+  }, 0);
+}
+
+function getStableQuote(profile) {
+  const seed = [profile.dbId, profile.id, profile.name, profile.age].filter(Boolean).join(":");
+  return autoQuoteTemplates[hashString(seed) % autoQuoteTemplates.length];
+}
+
 function encodeStoragePath(path) {
   return String(path || "")
     .split("/")
@@ -135,7 +177,7 @@ function mapMember(member) {
   const primaryPhotoPath = member.primary_photo_path || photoPaths[0] || "";
   const score = Number.isFinite(member.match_score) ? member.match_score : null;
 
-  return {
+  const profile = {
     id: member.slug || member.id,
     dbId: member.id,
     name: member.legal_name || member.display_name,
@@ -167,6 +209,13 @@ function mapMember(member) {
     quote: member.quote || "",
     about: member.about || "",
   };
+  if (!profile.tags.length) {
+    profile.tags = buildAutoTags(profile);
+  }
+  if (!profile.quote) {
+    profile.quote = getStableQuote(profile);
+  }
+  return profile;
 }
 
 async function fetchMembers() {

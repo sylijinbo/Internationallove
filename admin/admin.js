@@ -103,6 +103,15 @@ const fieldLabels = {
   about: "简介",
 };
 
+const autoQuoteTemplates = [
+  "希望认识重视家庭与长期关系、愿意认真沟通未来生活安排的伴侣。",
+  "期待一段真诚稳定的关系，在彼此尊重中一起规划未来。",
+  "重视家庭、沟通和责任感，希望遇见愿意认真经营关系的人。",
+  "欣赏温和真诚的相处方式，也愿意为长期承诺投入时间。",
+  "希望和价值观相近的人慢慢了解，建立踏实而稳定的生活。",
+  "相信好的关系来自坦诚沟通，也期待一起创造温暖的家庭。",
+];
+
 const usStateNames = new Set([
   "阿拉巴马州",
   "阿拉斯加州",
@@ -228,6 +237,34 @@ function splitList(value) {
     .split(/[,，、;；\n]/)
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+function uniqueValues(values) {
+  const seen = new Set();
+  return values
+    .map((value) => String(value || "").trim())
+    .filter(Boolean)
+    .filter((value) => {
+      const key = value.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
+
+function buildAutoTagsFromForm() {
+  return uniqueValues([
+    getValue("education"),
+    getValue("occupation"),
+    getValue("faith"),
+    getValue("smoking"),
+    getValue("housing"),
+  ]).slice(0, 4);
+}
+
+function getRandomQuote() {
+  const index = Math.floor(Math.random() * autoQuoteTemplates.length);
+  return autoQuoteTemplates[index];
 }
 
 function getLocationLabel(member) {
@@ -1079,6 +1116,8 @@ async function uploadLocalPhotos(slug) {
 
 function buildMemberPayload(slug, photoPaths, primaryPhotoPath) {
   const displayName = getValue("display_name");
+  const tags = splitList(getValue("tags"));
+  const quote = getValue("quote");
   return {
     display_name: displayName,
     legal_name: getValue("legal_name") || displayName,
@@ -1102,11 +1141,11 @@ function buildMemberPayload(slug, photoPaths, primaryPhotoPath) {
     languages: splitList(getValue("languages")),
     intent: getValue("intent") || null,
     relocation: getValue("relocation") || null,
-    tags: splitList(getValue("tags")),
+    tags: tags.length ? tags : buildAutoTagsFromForm(),
     match_score: numberOrNull(getValue("match_score")),
     is_verified: getField("is_verified").checked,
     is_new: getField("is_new").checked,
-    quote: getValue("quote") || null,
+    quote: quote || getRandomQuote(),
     about: getValue("about") || null,
     primary_photo_path: primaryPhotoPath,
     photo_paths: photoPaths,
