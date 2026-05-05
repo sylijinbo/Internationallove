@@ -412,13 +412,13 @@ function restoreDraft() {
 function getFriendlyErrorMessage(error) {
   const message = error?.message || String(error || "未知错误");
   if (/row-level security policy/i.test(message)) {
-    return `权限策略阻止了这次操作：${message}。请执行 admin/storage-policy-fix.sql 修复 member-photos 的 Storage policies。`;
+    return `权限策略阻止了这次操作：${message}。请重新执行 admin/supabase-setup.sql；如果仍失败，再执行 admin/storage-diagnostics.sql 检查策略。`;
   }
   if (/permission denied for table members/i.test(message)) {
-    return "members 表还没有给后台登录用户写入权限。请在 Supabase SQL Editor 执行 admin/members-permission-fix.sql。";
+    return "members 表还没有给后台登录用户写入权限。请在 Supabase SQL Editor 重新执行 admin/supabase-setup.sql。";
   }
   if (/members_gender_check|check constraint.*gender/i.test(message)) {
-    return "members.gender 的数据库约束还没更新。请在 Supabase SQL Editor 执行 admin/members-gender-fix.sql，然后刷新后台重试。";
+    return "members.gender 的数据库约束还没更新。请在 Supabase SQL Editor 重新执行 admin/supabase-setup.sql，然后刷新后台重试。";
   }
   if (/gender|interested_member_ids|column/i.test(message)) {
     return `数据库字段还没准备好：${message}。请先在 Supabase SQL Editor 执行 admin/supabase-setup.sql。`;
