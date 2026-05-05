@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AtlasVow 后台管理</title>
+    <link rel="preconnect" href="https://hgglkxizcwazqenqmfrm.supabase.co" />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+    <link rel="preconnect" href="https://unpkg.com" />
+    <link rel="stylesheet" href="admin.css" />
+  </head>
+  <body>
+    <header class="admin-header">
+      <a class="brand" href="../index.html#members">
+        <span class="brand-mark">AV</span>
+        <span>
+          <strong>AtlasVow</strong>
+          <small>会员后台</small>
+        </span>
+      </a>
+      <div class="header-actions">
+        <span id="sessionEmail" class="session-email"></span>
+        <a class="ghost-button" href="../index.html#members">前台主页</a>
+        <button id="logoutButton" class="ghost-button" type="button" hidden>
+          <i data-lucide="log-out"></i>
+          退出
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <section id="loginView" class="login-shell">
+        <form id="loginForm" class="login-panel">
+          <p class="eyebrow">Admin Sign In</p>
+          <h1>后台登录</h1>
+          <label>
+            <span>邮箱</span>
+            <input type="email" name="email" autocomplete="email" required />
+          </label>
+          <label>
+            <span>密码</span>
+            <input type="password" name="password" autocomplete="current-password" required />
+          </label>
+          <button type="submit">
+            <i data-lucide="log-in"></i>
+            登录后台
+          </button>
+          <p id="loginMessage" class="status-message" role="status"></p>
+        </form>
+      </section>
+
+      <section id="adminView" class="admin-shell" hidden>
+        <div class="workspace-heading">
+          <div>
+            <p class="eyebrow">Member Operations</p>
+            <h1>会员资料管理</h1>
+          </div>
+          <button id="newMemberButton" class="primary-button" type="button">
+            <i data-lucide="plus"></i>
+            新增会员
+          </button>
+        </div>
+        <p id="adminMessage" class="status-message admin-message" role="status"></p>
+
+        <div class="admin-grid">
+          <aside class="side-column">
+            <section class="panel smart-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Smart Intake</p>
+                  <h2>智能录入</h2>
+                </div>
+                <button id="clearSmartButton" class="text-button" type="button">清空</button>
+              </div>
+              <textarea
+                id="smartInput"
+                rows="11"
+                placeholder="姓名：Scott&#10;年龄:51岁&#10;性别:男&#10;教育: 本科&#10;职业:经理&#10;身高:176cm&#10;体重:165lb&#10;婚姻状况:离婚&#10;孩子：1&#10;居住：独栋住宅&#10;信仰：基督教新教&#10;抽烟：非吸烟者&#10;是否喝酒：社交应酬&#10;常住地：田纳西州"
+              ></textarea>
+              <button id="parseButton" class="secondary-button" type="button">
+                <i data-lucide="wand-sparkles"></i>
+                识别并填入表单
+              </button>
+              <div class="notice-box">
+                <strong>缺少字段</strong>
+                <div id="missingFields" class="pill-list"></div>
+              </div>
+              <div class="notice-box subtle">
+                <strong>待处理内容</strong>
+                <ul id="parseNotes"></ul>
+              </div>
+            </section>
+
+            <section class="panel member-list-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Members</p>
+                  <h2>会员列表</h2>
+                </div>
+                <span id="memberCount" class="count-pill">0</span>
+              </div>
+              <label class="compact-field">
+                <span>搜索</span>
+                <input id="memberSearch" type="search" placeholder="姓名、城市、国家" />
+              </label>
+              <label class="compact-field">
+                <span>状态</span>
+                <select id="statusFilter">
+                  <option value="all">全部</option>
+                  <option value="published">已发布</option>
+                  <option value="draft">已下架</option>
+                </select>
+              </label>
+              <div id="memberList" class="member-list" aria-live="polite"></div>
+            </section>
+          </aside>
+
+          <section class="editor-panel">
+            <form id="memberForm">
+              <div class="form-title-row">
+                <div>
+                  <p class="eyebrow">Profile Editor</p>
+                  <h2 id="formTitle">新增会员</h2>
+                </div>
+                <div class="form-actions">
+                  <button id="downMemberButton" class="danger-button" type="button" hidden>
+                    <i data-lucide="eye-off"></i>
+                    下架
+                  </button>
+                  <button class="primary-button" type="submit">
+                    <i data-lucide="save"></i>
+                    保存会员
+                  </button>
+                </div>
+              </div>
+
+              <input type="hidden" name="id" />
+
+              <fieldset>
+                <legend>基础信息</legend>
+                <div class="form-grid">
+                  <label>
+                    <span>展示姓名 *</span>
+                    <input name="display_name" type="text" required />
+                  </label>
+                  <label>
+                    <span>法定/英文名</span>
+                    <input name="legal_name" type="text" />
+                  </label>
+                  <label>
+                    <span>Slug</span>
+                    <input name="slug" type="text" placeholder="留空自动生成" />
+                  </label>
+                  <label>
+                    <span>状态</span>
+                    <select name="status">
+                      <option value="published">已发布</option>
+                      <option value="draft">已下架</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>年龄 *</span>
+                    <input name="age" type="number" min="18" max="99" required />
+                  </label>
+                  <label>
+                    <span>性别 *</span>
+                    <select name="gender" required>
+                      <option value="">请选择</option>
+                      <option value="male">男</option>
+                      <option value="female">女</option>
+                      <option value="other">其他</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>国家/地区 *</span>
+                    <input name="country" type="text" required />
+                  </label>
+                  <label>
+                    <span>州/省/区域</span>
+                    <input name="state_region" type="text" />
+                  </label>
+                  <label>
+                    <span>城市</span>
+                    <input name="city" type="text" />
+                  </label>
+                  <label>
+                    <span>关系目标 *</span>
+                    <select name="intent" required>
+                      <option value="">请选择</option>
+                      <option value="结婚">结婚</option>
+                      <option value="稳定交往">稳定交往</option>
+                      <option value="先了解">先了解</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>适配分</span>
+                    <input name="match_score" type="number" min="0" max="100" />
+                  </label>
+                  <label>
+                    <span>未来居住地</span>
+                    <input name="relocation" type="text" />
+                  </label>
+                </div>
+              </fieldset>
+
+              <fieldset>
+                <legend>资料详情</legend>
+                <div class="form-grid">
+                  <label>
+                    <span>教育</span>
+                    <input name="education" type="text" />
+                  </label>
+                  <label>
+                    <span>职业</span>
+                    <input name="occupation" type="text" />
+                  </label>
+                  <label>
+                    <span>身高 cm</span>
+                    <input name="height_cm" type="number" min="0" />
+                  </label>
+                  <label>
+                    <span>体重 lb</span>
+                    <input name="weight_lb" type="number" min="0" />
+                  </label>
+                  <label>
+                    <span>婚姻状况</span>
+                    <input name="marital_status" type="text" />
+                  </label>
+                  <label>
+                    <span>孩子</span>
+                    <input name="children_count" type="number" min="0" />
+                  </label>
+                  <label>
+                    <span>居住</span>
+                    <input name="housing" type="text" />
+                  </label>
+                  <label>
+                    <span>信仰</span>
+                    <input name="faith" type="text" />
+                  </label>
+                  <label>
+                    <span>抽烟</span>
+                    <input name="smoking" type="text" />
+                  </label>
+                  <label>
+                    <span>是否喝酒</span>
+                    <input name="drinking" type="text" />
+                  </label>
+                  <label>
+                    <span>语言，用逗号分隔</span>
+                    <input name="languages" type="text" placeholder="英文, 中文" />
+                  </label>
+                  <label>
+                    <span>标签，用逗号分隔</span>
+                    <input name="tags" type="text" placeholder="家庭观念, 喜欢旅行" />
+                  </label>
+                </div>
+                <div class="wide-fields">
+                  <label>
+                    <span>一句话</span>
+                    <input name="quote" type="text" />
+                  </label>
+                  <label>
+                    <span>简介 *</span>
+                    <textarea name="about" rows="4" required></textarea>
+                  </label>
+                </div>
+                <div class="check-grid">
+                  <label>
+                    <input name="is_verified" type="checkbox" />
+                    <span>已完成视频与证件核验</span>
+                  </label>
+                  <label>
+                    <input name="is_new" type="checkbox" />
+                    <span>标记为新上线</span>
+                  </label>
+                </div>
+              </fieldset>
+
+              <fieldset>
+                <legend>照片</legend>
+                <div class="photo-actions">
+                  <label class="file-button">
+                    <i data-lucide="folder-open"></i>
+                    选择本地目录
+                    <input id="folderInput" type="file" accept="image/jpeg,image/png,image/webp" multiple webkitdirectory directory />
+                  </label>
+                  <label class="file-button">
+                    <i data-lucide="images"></i>
+                    多选图片
+                    <input id="photoInput" type="file" accept="image/jpeg,image/png,image/webp" multiple />
+                  </label>
+                </div>
+                <div class="photo-workspace">
+                  <div class="homepage-preview">
+                    <strong>主页头像预览</strong>
+                    <div id="primaryPreview" class="preview-card">
+                      <div class="preview-photo-empty">请选择主图</div>
+                      <div class="preview-card-body">
+                        <span>会员名 · 年龄</span>
+                        <small>城市 · 关系目标</small>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <div id="photoGrid" class="photo-grid"></div>
+                    <p class="photo-hint">点击“设为主图”决定前台主页卡片使用哪一张。</p>
+                  </div>
+                </div>
+              </fieldset>
+
+              <p id="formMessage" class="status-message" role="status"></p>
+            </form>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="admin.js"></script>
+  </body>
+</html>

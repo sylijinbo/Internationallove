@@ -29,6 +29,7 @@ function readSavedIds() {
 const state = {
   mode: "featured",
   saved: new Set(readSavedIds()),
+  selectedMembers: [],
 };
 
 const profileGrid = document.querySelector("#profileGrid");
@@ -37,11 +38,13 @@ const ageRange = document.querySelector("#ageRange");
 const ageValue = document.querySelector("#ageValue");
 const dialog = document.querySelector("#profileDialog");
 const dialogContent = document.querySelector("#dialogContent");
-const selectedMember = document.querySelector("#selectedMember");
+const selectedMembersList = document.querySelector("#selectedMembersList");
+const selectedMemberCount = document.querySelector("#selectedMemberCount");
 const formMessage = document.querySelector("#formMessage");
 const themeSelect = document.querySelector("#themeSelect");
 const defaultTheme = "pink";
 const availableThemes = new Set(["default", "pink", "ocean"]);
+const maxAppointmentMembers = 3;
 const supabaseConfig = {
   url: "https://hgglkxizcwazqenqmfrm.supabase.co",
   publishableKey: "sb_publishable_dEZ6qglLvXD_BvMQ09aTQw_oaOi5ZU1",
@@ -516,13 +519,59 @@ function switchDialogPhoto(button) {
     .forEach((item) => item.classList.toggle("is-active", item === button));
 }
 
+function getAppointmentMemberLabel(member) {
+  return [member.name, member.location].filter(Boolean).join(" · ");
+}
+
+function renderSelectedMembers() {
+  selectedMemberCount.textContent = `${state.selectedMembers.length}/${maxAppointmentMembers}`;
+
+  if (!state.selectedMembers.length) {
+    selectedMembersList.innerHTML = `<p id="selectedMembersEmpty">可从会员卡选择，最多 3 位。</p>`;
+    return;
+  }
+
+  selectedMembersList.innerHTML = state.selectedMembers
+    .map(
+      (member) => `
+        <span class="selected-member-chip">
+          <span>${escapeHtml(getAppointmentMemberLabel(member))}</span>
+          <button type="button" data-remove-member="${escapeHtml(member.dbId)}" aria-label="移除${escapeHtml(member.name)}">
+            <i data-lucide="x"></i>
+          </button>
+        </span>
+      `
+    )
+    .join("");
+  activateIcons();
+}
+
+function removeSelectedMember(memberId) {
+  state.selectedMembers = state.selectedMembers.filter((member) => member.dbId !== memberId);
+  renderSelectedMembers();
+}
+
 function requestIntro(profileId) {
   const profile = profiles.find((item) => item.id === profileId);
   if (!profile) return;
   const location = getLocationLabel(profile) || profile.country;
+  const member = {
+    dbId: profile.dbId,
+    profileId: profile.id,
+    name: profile.cnName,
+    location,
+  };
 
-  selectedMember.value = `${profile.cnName} · ${location}`;
-  formMessage.textContent = `${profile.cnName} 已加入预约初谈。`;
+  if (state.selectedMembers.some((item) => item.dbId === member.dbId)) {
+    formMessage.textContent = `${profile.cnName} 已在预约名单中。`;
+  } else if (state.selectedMembers.length >= maxAppointmentMembers) {
+    formMessage.textContent = `一次预约最多选择 ${maxAppointmentMembers} 位会员。`;
+  } else {
+    state.selectedMembers.push(member);
+    renderSelectedMembers();
+    formMessage.textContent = `${profile.cnName} 已加入预约初谈。`;
+  }
+
   if (dialog.open) {
     dialog.close();
   }
@@ -652,6 +701,13 @@ dialog.addEventListener("click", (event) => {
   }
 });
 
+document.querySelector("#consult").addEventListener("click", (event) => {
+  const removeButton = event.target.closest("[data-remove-member]");
+  if (!removeButton) return;
+  removeSelectedMember(removeButton.dataset.removeMember);
+  formMessage.textContent = "已更新感兴趣会员名单。";
+});
+
 document.querySelector("#consult").addEventListener("submit", async (event) => {
   event.preventDefault();
   const form = event.currentTarget;
@@ -659,10 +715,23 @@ document.querySelector("#consult").addEventListener("submit", async (event) => {
   const data = new FormData(form);
   const name = String(data.get("name") || "").trim();
   const contact = String(data.get("contact") || "").trim();
-  const member = String(data.get("member") || "").trim();
+  const selectedMembers = state.selectedMembers.map((member) => ({
+    id: member.dbId,
+    display_name: member.name,
+    location: member.location,
+  }));
+  const selectedMemberIds = selectedMembers.map((member) => member.id).filter(Boolean);
+  const selectedMemberText = selectedMembers
+    .map((member) => [member.display_name, member.location].filter(Boolean).join(" · "))
+    .join("；");
 
   if (!name || !contact) {
     formMessage.textContent = "请填写称呼和联系方式。";
+    return;
+  }
+
+  if (selectedMemberIds.length > maxAppointmentMembers) {
+    formMessage.textContent = `一次预约最多选择 ${maxAppointmentMembers} 位会员。`;
     return;
   }
 
@@ -674,16 +743,20 @@ document.querySelector("#consult").addEventListener("submit", async (event) => {
     await createAppointment({
       customer_name: name,
       contact,
-      interested_member: member || null,
+      interested_member: selectedMemberText || null,
+      interested_member_ids: selectedMemberIds,
       source_url: window.location.href,
       user_agent: navigator.userAgent,
       form_payload: {
-        interested_member: member || null,
+        selected_members: selectedMembers,
+        interested_member: selectedMemberText || null,
       },
     });
 
     formMessage.textContent = `${name}，预约信息已记录，顾问将在一个工作日内联系你。`;
     form.reset();
+    state.selectedMembers = [];
+    renderSelectedMembers();
   } catch (error) {
     console.error(error);
     formMessage.textContent = "预约暂时没有提交成功，请稍后再试。";
@@ -699,4 +772,5 @@ window.addEventListener("load", () => {
 
 applyTheme(document.documentElement.dataset.theme, false);
 ageValue.textContent = ageRange.value;
+renderSelectedMembers();
 loadProfiles();

@@ -367,7 +367,8 @@ button {
 }
 
 .filter-form label,
-.consult-form label {
+.consult-form label,
+.selected-members-field {
   display: grid;
   gap: 7px;
   color: var(--ink);
@@ -829,6 +830,73 @@ input[type="range"] {
   min-height: 20px;
   margin: 0;
   font-size: 13px;
+}
+
+.selected-members-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.selected-members-heading small {
+  color: var(--teal-dark);
+  font-weight: 900;
+}
+
+.selected-members-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 48px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--control-bg);
+}
+
+.selected-members-list p {
+  margin: auto 0;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.selected-member-chip {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-height: 32px;
+  gap: 6px;
+  padding: 4px 5px 4px 10px;
+  border: 1px solid rgba(var(--brand-rgb), 0.2);
+  border-radius: 999px;
+  background: rgba(var(--brand-rgb), 0.09);
+  color: var(--teal-dark);
+}
+
+.selected-member-chip span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selected-member-chip button {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(var(--shadow-rgb), 0.1);
+  color: var(--ink);
+}
+
+.selected-member-chip button:hover {
+  background: rgba(var(--accent-rgb), 0.16);
+  color: var(--saved-heart);
 }
 
 .trust-section,

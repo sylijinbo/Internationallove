@@ -226,10 +226,15 @@
               <span>联系方式</span>
               <input type="text" name="contact" placeholder="邮箱或手机" required />
             </label>
-            <label>
-              <span>感兴趣会员</span>
-              <input id="selectedMember" type="text" name="member" placeholder="可从会员卡选择" />
-            </label>
+            <div class="selected-members-field" aria-live="polite">
+              <div class="selected-members-heading">
+                <span>感兴趣会员</span>
+                <small id="selectedMemberCount">0/3</small>
+              </div>
+              <div id="selectedMembersList" class="selected-members-list">
+                <p id="selectedMembersEmpty">可从会员卡选择，最多 3 位。</p>
+              </div>
+            </div>
             <button type="submit">
               <i data-lucide="send"></i>
               提交预约
