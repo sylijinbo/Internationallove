@@ -389,30 +389,47 @@ function openProfile(profileId) {
   const profile = profiles.find((item) => item.id === profileId);
   if (!profile) return;
   const location = getLocationLabel(profile) || profile.country;
+  const photos = [...new Set([profile.image, ...profile.photoUrls].filter(Boolean))];
+  const activePhoto = photos[0] || "";
+  const activePhotoAlt = `${profile.cnName}的会员照片`;
   const scoreMarkup =
     profile.score === null
       ? ""
       : `<span class="score-pill">${escapeHtml(profile.score)}% 适配</span>`;
-  const galleryMarkup =
-    profile.photoUrls.length > 1
+  const carouselMarkup =
+    photos.length > 1
       ? `
-        <div class="dialog-gallery" aria-label="${escapeHtml(profile.cnName)}的更多照片">
-          ${profile.photoUrls
+        <div class="dialog-carousel" aria-label="${escapeHtml(profile.cnName)}照片轮播">
+          ${photos
             .map(
               (photoUrl, index) => `
-                <img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(profile.cnName)}照片 ${index + 1}" loading="lazy" />
+                <button
+                  class="dialog-thumb ${index === 0 ? "is-active" : ""}"
+                  type="button"
+                  data-photo="${escapeHtml(photoUrl)}"
+                  data-photo-alt="${escapeHtml(profile.cnName)}照片 ${index + 1}"
+                  aria-label="查看第 ${index + 1} 张照片"
+                >
+                  <img src="${escapeHtml(photoUrl)}" alt="" loading="lazy" />
+                </button>
               `
             )
             .join("")}
         </div>
       `
       : "";
+  const photoMarkup = activePhoto
+    ? `<img id="dialogMainPhoto" src="${escapeHtml(activePhoto)}" alt="${escapeHtml(activePhotoAlt)}" />`
+    : `<div class="dialog-photo-empty">暂无会员照片</div>`;
 
   dialogContent.innerHTML = `
     <div class="dialog-profile">
       <div class="dialog-visual">
-        <img src="${escapeHtml(profile.image)}" alt="${escapeHtml(profile.cnName)}的会员照片" />
-        ${scoreMarkup}
+        <div class="dialog-photo-stage">
+          ${photoMarkup}
+          ${scoreMarkup}
+        </div>
+        ${carouselMarkup}
       </div>
       <div class="dialog-details">
         <div>
@@ -421,7 +438,6 @@ function openProfile(profileId) {
           <p>${escapeHtml(profile.name)} · ${escapeHtml(profile.age)} 岁 · ${escapeHtml(profile.intent)}</p>
         </div>
         <p>${escapeHtml(profile.about)}</p>
-        ${galleryMarkup}
         <div class="fact-grid">
           <div>
             <span>教育</span>
@@ -484,7 +500,20 @@ function openProfile(profileId) {
   `;
 
   dialog.showModal();
+  document.documentElement.classList.add("dialog-lock");
+  document.body.classList.add("dialog-lock");
   activateIcons();
+}
+
+function switchDialogPhoto(button) {
+  const mainPhoto = dialog.querySelector("#dialogMainPhoto");
+  if (!mainPhoto) return;
+
+  mainPhoto.src = button.dataset.photo;
+  mainPhoto.alt = button.dataset.photoAlt || mainPhoto.alt;
+  dialog
+    .querySelectorAll(".dialog-thumb")
+    .forEach((item) => item.classList.toggle("is-active", item === button));
 }
 
 function requestIntro(profileId) {
@@ -562,10 +591,45 @@ profileGrid.addEventListener("click", (event) => {
 });
 
 dialog.addEventListener("click", (event) => {
+  const photoButton = event.target.closest("[data-photo]");
+  if (photoButton) {
+    switchDialogPhoto(photoButton);
+    return;
+  }
+
   const introButton = event.target.closest("[data-intro]");
   if (introButton) {
     requestIntro(introButton.dataset.intro);
   }
+});
+
+function allowsDialogScroll(target) {
+  return target instanceof Element && Boolean(target.closest(".dialog-details, .dialog-carousel"));
+}
+
+dialog.addEventListener(
+  "wheel",
+  (event) => {
+    if (!allowsDialogScroll(event.target)) {
+      event.preventDefault();
+    }
+  },
+  { passive: false }
+);
+
+dialog.addEventListener(
+  "touchmove",
+  (event) => {
+    if (!allowsDialogScroll(event.target)) {
+      event.preventDefault();
+    }
+  },
+  { passive: false }
+);
+
+dialog.addEventListener("close", () => {
+  document.documentElement.classList.remove("dialog-lock");
+  document.body.classList.remove("dialog-lock");
 });
 
 document.querySelector(".dialog-close").addEventListener("click", () => {

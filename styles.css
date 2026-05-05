@@ -923,13 +923,20 @@ input[type="range"] {
 }
 
 .profile-dialog {
-  width: min(880px, calc(100vw - 28px));
-  max-height: calc(100vh - 28px);
+  position: fixed;
+  inset: 0;
+  width: min(clamp(720px, 68vw, 1280px), calc(100vw - 96px));
+  height: min(78vh, 820px);
+  max-width: none;
+  max-height: none;
+  margin: auto;
   padding: 0;
   overflow: hidden;
   border: 0;
   border-radius: 8px;
+  background: var(--control-bg);
   box-shadow: 0 34px 90px rgba(var(--shadow-rgb), 0.28);
+  overscroll-behavior: contain;
 }
 
 .profile-dialog::backdrop {
@@ -952,24 +959,63 @@ input[type="range"] {
   color: #fff;
 }
 
+#dialogContent {
+  height: 100%;
+}
+
+html.dialog-lock,
+body.dialog-lock {
+  overflow: hidden;
+}
+
 .dialog-profile {
   display: grid;
-  grid-template-columns: 42% 1fr;
-  min-height: 520px;
-  max-height: calc(100vh - 28px);
+  grid-template-columns: minmax(340px, 44%) minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
   background: var(--control-bg);
+  overscroll-behavior: contain;
 }
 
 .dialog-visual {
   position: relative;
-  min-height: 520px;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-height: 0;
+  overflow: hidden;
+  border-right: 1px solid var(--line);
   background: var(--soft-bg);
+  overscroll-behavior: contain;
 }
 
-.dialog-visual img {
+.dialog-photo-stage {
+  position: relative;
+  display: grid;
+  min-height: 0;
+  place-items: center;
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, rgba(var(--brand-rgb), 0.08), transparent 42%),
+    var(--soft-bg);
+  overscroll-behavior: contain;
+}
+
+.dialog-photo-stage img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
+}
+
+.dialog-photo-empty {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  color: var(--muted);
+  font-weight: 800;
 }
 
 .dialog-visual .score-pill {
@@ -977,12 +1023,51 @@ input[type="range"] {
   bottom: 18px;
 }
 
+.dialog-carousel {
+  display: grid;
+  grid-auto-columns: 74px;
+  grid-auto-flow: column;
+  gap: 8px;
+  min-height: 94px;
+  overflow-x: auto;
+  padding: 10px;
+  border-top: 1px solid var(--line);
+  background: var(--control-bg);
+  overscroll-behavior: contain;
+}
+
+.dialog-thumb {
+  min-width: 0;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: var(--soft-bg);
+}
+
+.dialog-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.dialog-thumb.is-active,
+.dialog-thumb:focus-visible {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(var(--brand-rgb), 0.14);
+  outline: 0;
+}
+
 .dialog-details {
   display: grid;
   align-content: start;
   gap: 18px;
+  min-height: 0;
   overflow-y: auto;
   padding: 34px;
+  overscroll-behavior: contain;
 }
 
 .dialog-details h2 {
@@ -994,20 +1079,6 @@ input[type="range"] {
 .dialog-details p {
   margin: 0;
   color: var(--muted);
-}
-
-.dialog-gallery {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.dialog-gallery img {
-  width: 100%;
-  aspect-ratio: 4 / 5;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  object-fit: cover;
 }
 
 .fact-grid {
@@ -1200,16 +1271,28 @@ input[type="range"] {
     padding: 36px 14px;
   }
 
+  .profile-dialog {
+    width: calc(100vw - 20px);
+    height: calc(100vh - 20px);
+  }
+
+  .dialog-profile {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(280px, 42vh) minmax(0, 1fr);
+  }
+
   .dialog-visual {
-    min-height: 360px;
+    min-height: 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .dialog-carousel {
+    grid-auto-columns: 62px;
   }
 
   .dialog-details {
     padding: 24px;
-  }
-
-  .dialog-gallery {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .panel-heading h1,
