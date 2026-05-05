@@ -217,12 +217,8 @@ function normalizeGender(value) {
   if (["male", "man", "men", "m", "男", "男性", "男士"].includes(compact)) {
     return "male";
   }
-  if (["other", "其它", "其他", "nonbinary", "non-binary", "非二元"].includes(compact)) {
-    return "other";
-  }
   if (/女|female|woman/i.test(text)) return "female";
   if (/男|male|man/i.test(text)) return "male";
-  if (/其他|其它|other|non[-\s]?binary/i.test(text)) return "other";
 
   return "";
 }

@@ -8,9 +8,7 @@ update public.members
 set gender = case
   when lower(trim(gender)) in ('male', 'man', 'men', 'm') or trim(gender) in ('男', '男性', '男士') then 'male'
   when lower(trim(gender)) in ('female', 'woman', 'women', 'f') or trim(gender) in ('女', '女性', '女士') then 'female'
-  when lower(trim(gender)) in ('other', 'nonbinary', 'non-binary') or trim(gender) in ('其他', '其它', '非二元') then 'other'
-  when trim(gender) = '' then null
-  else gender
+  else null
 end
 where gender is not null;
 
@@ -19,7 +17,7 @@ alter table public.members
 
 alter table public.members
   add constraint members_gender_check
-  check (gender is null or gender in ('male', 'female', 'other')) not valid;
+  check (gender is null or gender in ('male', 'female')) not valid;
 
 alter table public.appointments
   add column if not exists interested_member_ids uuid[] not null default '{}';
