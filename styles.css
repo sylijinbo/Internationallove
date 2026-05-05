@@ -922,6 +922,7 @@ input[type="range"] {
 
 .profile-dialog {
   width: min(880px, calc(100vw - 28px));
+  max-height: calc(100vh - 28px);
   padding: 0;
   overflow: hidden;
   border: 0;
@@ -953,6 +954,7 @@ input[type="range"] {
   display: grid;
   grid-template-columns: 42% 1fr;
   min-height: 520px;
+  max-height: calc(100vh - 28px);
   background: var(--control-bg);
 }
 
@@ -977,6 +979,7 @@ input[type="range"] {
   display: grid;
   align-content: start;
   gap: 18px;
+  overflow-y: auto;
   padding: 34px;
 }
 
@@ -989,6 +992,20 @@ input[type="range"] {
 .dialog-details p {
   margin: 0;
   color: var(--muted);
+}
+
+.dialog-gallery {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.dialog-gallery img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  object-fit: cover;
 }
 
 .fact-grid {
@@ -1187,6 +1204,10 @@ input[type="range"] {
 
   .dialog-details {
     padding: 24px;
+  }
+
+  .dialog-gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .panel-heading h1,

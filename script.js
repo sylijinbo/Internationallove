@@ -1,173 +1,4 @@
-const profiles = [
-  {
-    id: "maya",
-    name: "Maya Chen",
-    cnName: "陈曼雅",
-    age: 31,
-    country: "加拿大",
-    city: "温哥华",
-    home: "中国",
-    languages: ["中文", "英文"],
-    intent: "结婚",
-    relocation: "上海或温哥华",
-    score: 96,
-    verified: true,
-    isNew: false,
-    image:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=900&q=80",
-    tags: ["家庭观稳定", "双语沟通", "愿意两地探访"],
-    quote: "希望和对方把家庭、职业与城市选择都讲清楚，再一起认真推进。",
-    about:
-      "金融科技产品经理，出生在上海，长期在温哥华生活。偏好坦诚沟通，期待三到六个月内安排线下见面。",
-  },
-  {
-    id: "oliver",
-    name: "Oliver Hayes",
-    cnName: "奥利弗",
-    age: 36,
-    country: "英国",
-    city: "伦敦",
-    home: "英国",
-    languages: ["英文", "中文"],
-    intent: "结婚",
-    relocation: "伦敦或杭州",
-    score: 93,
-    verified: true,
-    isNew: true,
-    image:
-      "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=900&q=80",
-    tags: ["中文学习中", "喜欢家庭旅行", "稳定职业"],
-    quote: "我重视长期承诺，也愿意学习对方家庭里的表达方式。",
-    about:
-      "建筑顾问，曾在杭州工作两年。希望认识有国际生活经验、愿意共同规划居住城市的伴侣。",
-  },
-  {
-    id: "aiko",
-    name: "Aiko Tanaka",
-    cnName: "田中爱子",
-    age: 29,
-    country: "日本",
-    city: "东京",
-    home: "日本",
-    languages: ["日文", "英文", "中文"],
-    intent: "稳定交往",
-    relocation: "东京或台北",
-    score: 89,
-    verified: true,
-    isNew: false,
-    image:
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=900&q=80",
-    tags: ["慢热真诚", "三语沟通", "重视边界"],
-    quote: "我喜欢慢慢了解，但希望每一步都是真实而有方向的。",
-    about:
-      "教育行业项目负责人，常往返东京与台北。期待对方尊重个人边界，同时愿意投入稳定关系。",
-  },
-  {
-    id: "lucas",
-    name: "Lucas Moreau",
-    cnName: "卢卡斯",
-    age: 34,
-    country: "法国",
-    city: "巴黎",
-    home: "法国",
-    languages: ["法文", "英文"],
-    intent: "结婚",
-    relocation: "巴黎或深圳",
-    score: 91,
-    verified: false,
-    isNew: true,
-    image:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=900&q=80",
-    tags: ["开放迁居", "热爱烹饪", "家庭关系亲密"],
-    quote: "好的关系应该让两个人都保留自我，也愿意一起承担现实安排。",
-    about:
-      "供应链策略顾问，服务多家亚洲企业。对中国文化熟悉，正在完成视频核验流程。",
-  },
-  {
-    id: "sophia",
-    name: "Sophia Miller",
-    cnName: "索菲亚",
-    age: 33,
-    country: "美国",
-    city: "旧金山",
-    home: "美国",
-    languages: ["英文", "中文"],
-    intent: "稳定交往",
-    relocation: "旧金山或上海",
-    score: 88,
-    verified: true,
-    isNew: false,
-    image:
-      "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80",
-    tags: ["科技行业", "可远程工作", "喜欢深度对话"],
-    quote: "跨国关系不是浪漫滤镜，而是一起处理每个真实细节。",
-    about:
-      "数据科学家，中文流利。愿意先通过双语视频建立信任，再安排双方城市互访。",
-  },
-  {
-    id: "ethan",
-    name: "Ethan Brooks",
-    cnName: "伊森",
-    age: 38,
-    country: "澳大利亚",
-    city: "悉尼",
-    home: "澳大利亚",
-    languages: ["英文"],
-    intent: "结婚",
-    relocation: "悉尼或广州",
-    score: 86,
-    verified: true,
-    isNew: false,
-    image:
-      "https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&w=900&q=80",
-    tags: ["成熟稳定", "重视家庭", "愿意学习中文"],
-    quote: "我期待一个温暖、直接、可以一起做长期决定的人。",
-    about:
-      "医疗器械企业负责人，家庭观传统但沟通开放。希望未来两年内进入婚姻阶段。",
-  },
-  {
-    id: "lina",
-    name: "Lina Weber",
-    cnName: "莉娜",
-    age: 35,
-    country: "德国",
-    city: "柏林",
-    home: "德国",
-    languages: ["德文", "英文", "中文"],
-    intent: "先了解",
-    relocation: "柏林或成都",
-    score: 84,
-    verified: false,
-    isNew: true,
-    image:
-      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=900&q=80",
-    tags: ["重视平等", "艺术策展", "喜欢城市漫步"],
-    quote: "我希望关系从真实的日常开始，而不是只停在远距离想象里。",
-    about:
-      "策展人与自由撰稿人，曾在成都驻留半年。喜欢有耐心、能表达情绪的人。",
-  },
-  {
-    id: "noah",
-    name: "Noah Reed",
-    cnName: "诺亚",
-    age: 40,
-    country: "美国",
-    city: "纽约",
-    home: "美国",
-    languages: ["英文", "中文"],
-    intent: "结婚",
-    relocation: "纽约或北京",
-    score: 90,
-    verified: true,
-    isNew: false,
-    image:
-      "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=900&q=80",
-    tags: ["离异无孩", "认真再婚", "财务透明"],
-    quote: "我清楚自己想要什么，也希望对方能诚实谈论过去与未来。",
-    about:
-      "律师，曾有一段婚姻经历。重视责任感、沟通成熟度与对家庭的持续投入。",
-  },
-];
+let profiles = [];
 
 function readStorage(key, fallback) {
   try {
@@ -215,6 +46,40 @@ const supabaseConfig = {
   url: "https://hgglkxizcwazqenqmfrm.supabase.co",
   publishableKey: "sb_publishable_dEZ6qglLvXD_BvMQ09aTQw_oaOi5ZU1",
 };
+const memberPhotoBucket = "member-photos";
+const memberSelectFields = [
+  "id",
+  "slug",
+  "display_name",
+  "legal_name",
+  "age",
+  "gender",
+  "country",
+  "state_region",
+  "city",
+  "education",
+  "occupation",
+  "height_cm",
+  "weight_lb",
+  "marital_status",
+  "children_count",
+  "housing",
+  "faith",
+  "smoking",
+  "drinking",
+  "languages",
+  "intent",
+  "relocation",
+  "tags",
+  "match_score",
+  "is_verified",
+  "is_new",
+  "quote",
+  "about",
+  "primary_photo_path",
+  "photo_paths",
+  "created_at",
+].join(",");
 
 const controls = {
   home: document.querySelector("#homeFilter"),
@@ -224,6 +89,113 @@ const controls = {
   verified: document.querySelector("#verifiedFilter"),
   search: document.querySelector("#searchInput"),
 };
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (character) => {
+    const entities = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    };
+    return entities[character];
+  });
+}
+
+function normalizeArray(value) {
+  return Array.isArray(value) ? value.filter(Boolean) : [];
+}
+
+function encodeStoragePath(path) {
+  return String(path || "")
+    .split("/")
+    .map((part) => encodeURIComponent(part))
+    .join("/");
+}
+
+function getMemberPhotoUrl(path) {
+  if (!path) return "";
+  return `${supabaseConfig.url}/storage/v1/object/public/${memberPhotoBucket}/${encodeStoragePath(path)}`;
+}
+
+function getLocationLabel(profile) {
+  return [profile.city, profile.stateRegion, profile.country].filter(Boolean).join("，");
+}
+
+function getDisplayValue(value, fallback = "未填写") {
+  return value === null || value === undefined || value === "" ? fallback : value;
+}
+
+function mapMember(member) {
+  const photoPaths = normalizeArray(member.photo_paths);
+  const primaryPhotoPath = member.primary_photo_path || photoPaths[0] || "";
+  const score = Number.isFinite(member.match_score) ? member.match_score : null;
+
+  return {
+    id: member.slug || member.id,
+    dbId: member.id,
+    name: member.legal_name || member.display_name,
+    cnName: member.display_name,
+    age: Number(member.age),
+    country: member.country || "",
+    stateRegion: member.state_region || "",
+    city: member.city || "",
+    home: member.country || "",
+    education: member.education || "",
+    occupation: member.occupation || "",
+    heightCm: member.height_cm,
+    weightLb: member.weight_lb,
+    maritalStatus: member.marital_status || "",
+    childrenCount: member.children_count,
+    housing: member.housing || "",
+    faith: member.faith || "",
+    smoking: member.smoking || "",
+    drinking: member.drinking || "",
+    languages: normalizeArray(member.languages),
+    intent: member.intent || "结婚",
+    relocation: member.relocation || "",
+    score,
+    verified: Boolean(member.is_verified),
+    isNew: Boolean(member.is_new),
+    image: getMemberPhotoUrl(primaryPhotoPath),
+    photoUrls: photoPaths.map(getMemberPhotoUrl).filter(Boolean),
+    tags: normalizeArray(member.tags),
+    quote: member.quote || "",
+    about: member.about || "",
+  };
+}
+
+async function fetchMembers() {
+  const params = new URLSearchParams({
+    select: memberSelectFields,
+    status: "eq.published",
+    order: "created_at.desc",
+  });
+  const response = await fetch(`${supabaseConfig.url}/rest/v1/members?${params}`, {
+    headers: {
+      apikey: supabaseConfig.publishableKey,
+      Authorization: `Bearer ${supabaseConfig.publishableKey}`,
+    },
+  });
+
+  if (!response.ok) {
+    let message = "Member profiles request failed.";
+
+    try {
+      const details = await response.json();
+      message = details.message || details.error || message;
+    } catch (error) {
+      const text = await response.text();
+      message = text || message;
+    }
+
+    throw new Error(message);
+  }
+
+  const data = await response.json();
+  return Array.isArray(data) ? data.map(mapMember) : [];
+}
 
 function persistSaved() {
   writeStorage("atlasvowSaved", JSON.stringify([...state.saved]));
@@ -273,7 +245,15 @@ function matchesFilters(profile) {
     profile.cnName,
     profile.country,
     profile.city,
+    profile.stateRegion,
     profile.home,
+    profile.education,
+    profile.occupation,
+    profile.maritalStatus,
+    profile.housing,
+    profile.faith,
+    profile.smoking,
+    profile.drinking,
     profile.intent,
     profile.relocation,
     ...profile.languages,
@@ -302,7 +282,12 @@ function matchesFilters(profile) {
 function renderProfiles() {
   const filtered = profiles
     .filter(matchesFilters)
-    .sort((a, b) => b.score - a.score || Number(b.isNew) - Number(a.isNew));
+    .sort(
+      (a, b) =>
+        (b.score ?? -1) - (a.score ?? -1) ||
+        Number(b.isNew) - Number(a.isNew) ||
+        a.age - b.age
+    );
 
   resultCount.textContent = `${filtered.length} 位会员`;
 
@@ -319,40 +304,78 @@ function renderProfiles() {
   activateIcons();
 }
 
+async function loadProfiles() {
+  resultCount.textContent = "加载中";
+  profileGrid.innerHTML = `
+    <div class="empty-state">
+      <p>正在加载真实会员资料...</p>
+    </div>
+  `;
+
+  try {
+    profiles = await fetchMembers();
+    renderProfiles();
+  } catch (error) {
+    console.error(error);
+    profiles = [];
+    resultCount.textContent = "0 位会员";
+    profileGrid.innerHTML = `
+      <div class="empty-state">
+        <p>会员资料暂时无法加载，请稍后再试。</p>
+      </div>
+    `;
+  }
+}
+
 function createCardMarkup(profile) {
   const saved = state.saved.has(profile.id);
+  const profileId = escapeHtml(profile.id);
+  const profileName = escapeHtml(profile.cnName);
+  const age = escapeHtml(profile.age);
+  const location = escapeHtml(getLocationLabel(profile) || profile.country);
+  const intent = escapeHtml(profile.intent);
+  const scoreMarkup =
+    profile.score === null
+      ? ""
+      : `<span class="score-pill">${escapeHtml(profile.score)}% 适配</span>`;
+  const compatibilityMarkup =
+    profile.score === null
+      ? ""
+      : `
+        <div class="compatibility" aria-label="适配度 ${escapeHtml(profile.score)}%">
+          <span>文化与规划适配</span>
+          <div class="bar"><i style="width: ${escapeHtml(profile.score)}%"></i></div>
+        </div>
+      `;
 
   return `
-    <article class="profile-card" data-profile="${profile.id}">
+    <article class="profile-card" data-profile="${profileId}">
       <div class="profile-photo">
-        <img src="${profile.image}" alt="${profile.cnName}的会员照片" loading="lazy" />
+        <img src="${escapeHtml(profile.image)}" alt="${profileName}的会员照片" loading="lazy" />
         <span class="photo-badge">${profile.verified ? "已核验" : "待复核"}</span>
-        <span class="score-pill">${profile.score}% 适配</span>
+        ${scoreMarkup}
       </div>
       <div class="profile-body">
         <div class="profile-topline">
           <div>
-            <h3>${profile.cnName} · ${profile.age}</h3>
-            <p class="profile-meta">${profile.city}，${profile.country} · ${profile.intent}</p>
+            <h3>${profileName} · ${age}</h3>
+            <p class="profile-meta">${location} · ${intent}</p>
           </div>
-          <button class="favorite-button ${saved ? "is-saved" : ""}" type="button" data-save="${profile.id}" aria-label="${saved ? "取消收藏" : "收藏"}${profile.cnName}">
+          <button class="favorite-button ${saved ? "is-saved" : ""}" type="button" data-save="${profileId}" aria-label="${saved ? "取消收藏" : "收藏"}${profileName}">
             <i data-lucide="heart"></i>
           </button>
         </div>
         <div class="tag-list">
-          ${profile.tags.map((tag) => `<span>${tag}</span>`).join("")}
+          ${profile.tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}
         </div>
-        <div class="compatibility" aria-label="适配度 ${profile.score}%">
-          <span>文化与规划适配</span>
-          <div class="bar"><i style="width: ${profile.score}%"></i></div>
-        </div>
-        <p class="profile-quote">${profile.quote}</p>
+        ${compatibilityMarkup}
+        <p class="profile-quote">${escapeHtml(profile.quote)}</p>
         <div class="profile-actions">
-          <button type="button" data-open="${profile.id}">
+          <button type="button" data-open="${profileId}">
             <i data-lucide="user-round"></i>
             资料
           </button>
-          <button class="secondary" type="button" data-intro="${profile.id}">
+          <button class="secondary" type="button" data-intro="${profileId}">
             <i data-lucide="message-circle"></i>
             介绍
           </button>
@@ -365,28 +388,80 @@ function createCardMarkup(profile) {
 function openProfile(profileId) {
   const profile = profiles.find((item) => item.id === profileId);
   if (!profile) return;
+  const location = getLocationLabel(profile) || profile.country;
+  const scoreMarkup =
+    profile.score === null
+      ? ""
+      : `<span class="score-pill">${escapeHtml(profile.score)}% 适配</span>`;
+  const galleryMarkup =
+    profile.photoUrls.length > 1
+      ? `
+        <div class="dialog-gallery" aria-label="${escapeHtml(profile.cnName)}的更多照片">
+          ${profile.photoUrls
+            .map(
+              (photoUrl, index) => `
+                <img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(profile.cnName)}照片 ${index + 1}" loading="lazy" />
+              `
+            )
+            .join("")}
+        </div>
+      `
+      : "";
 
   dialogContent.innerHTML = `
     <div class="dialog-profile">
       <div class="dialog-visual">
-        <img src="${profile.image}" alt="${profile.cnName}的会员照片" />
-        <span class="score-pill">${profile.score}% 适配</span>
+        <img src="${escapeHtml(profile.image)}" alt="${escapeHtml(profile.cnName)}的会员照片" />
+        ${scoreMarkup}
       </div>
       <div class="dialog-details">
         <div>
-          <p class="eyebrow">${profile.city}, ${profile.country}</p>
-          <h2 id="dialogName">${profile.cnName}</h2>
-          <p>${profile.name} · ${profile.age} 岁 · ${profile.intent}</p>
+          <p class="eyebrow">${escapeHtml(location)}</p>
+          <h2 id="dialogName">${escapeHtml(profile.cnName)}</h2>
+          <p>${escapeHtml(profile.name)} · ${escapeHtml(profile.age)} 岁 · ${escapeHtml(profile.intent)}</p>
         </div>
-        <p>${profile.about}</p>
+        <p>${escapeHtml(profile.about)}</p>
+        ${galleryMarkup}
         <div class="fact-grid">
           <div>
+            <span>教育</span>
+            <strong>${escapeHtml(getDisplayValue(profile.education))}</strong>
+          </div>
+          <div>
+            <span>职业</span>
+            <strong>${escapeHtml(getDisplayValue(profile.occupation))}</strong>
+          </div>
+          <div>
+            <span>身高 / 体重</span>
+            <strong>${escapeHtml(getDisplayValue(profile.heightCm))}cm / ${escapeHtml(getDisplayValue(profile.weightLb))}lb</strong>
+          </div>
+          <div>
+            <span>婚姻状况</span>
+            <strong>${escapeHtml(getDisplayValue(profile.maritalStatus))}</strong>
+          </div>
+          <div>
+            <span>孩子</span>
+            <strong>${escapeHtml(getDisplayValue(profile.childrenCount))}</strong>
+          </div>
+          <div>
+            <span>居住</span>
+            <strong>${escapeHtml(getDisplayValue(profile.housing))}</strong>
+          </div>
+          <div>
+            <span>信仰</span>
+            <strong>${escapeHtml(getDisplayValue(profile.faith))}</strong>
+          </div>
+          <div>
+            <span>烟酒</span>
+            <strong>${escapeHtml(getDisplayValue(profile.smoking))} / ${escapeHtml(getDisplayValue(profile.drinking))}</strong>
+          </div>
+          <div>
             <span>沟通语言</span>
-            <strong>${profile.languages.join(" / ")}</strong>
+            <strong>${escapeHtml(profile.languages.join(" / ") || "未填写")}</strong>
           </div>
           <div>
             <span>未来居住地</span>
-            <strong>${profile.relocation}</strong>
+            <strong>${escapeHtml(getDisplayValue(profile.relocation))}</strong>
           </div>
           <div>
             <span>资料状态</span>
@@ -394,13 +469,13 @@ function openProfile(profileId) {
           </div>
           <div>
             <span>适配标签</span>
-            <strong>${profile.tags[0]}</strong>
+            <strong>${escapeHtml(getDisplayValue(profile.tags[0]))}</strong>
           </div>
         </div>
         <div class="tag-list">
-          ${profile.tags.map((tag) => `<span>${tag}</span>`).join("")}
+          ${profile.tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}
         </div>
-        <button class="dialog-action" type="button" data-intro="${profile.id}">
+        <button class="dialog-action" type="button" data-intro="${escapeHtml(profile.id)}">
           <i data-lucide="calendar-plus"></i>
           预约介绍
         </button>
@@ -415,8 +490,9 @@ function openProfile(profileId) {
 function requestIntro(profileId) {
   const profile = profiles.find((item) => item.id === profileId);
   if (!profile) return;
+  const location = getLocationLabel(profile) || profile.country;
 
-  selectedMember.value = `${profile.cnName} · ${profile.city}`;
+  selectedMember.value = `${profile.cnName} · ${location}`;
   formMessage.textContent = `${profile.cnName} 已加入预约初谈。`;
   if (dialog.open) {
     dialog.close();
@@ -558,4 +634,5 @@ window.addEventListener("load", () => {
 });
 
 applyTheme(document.documentElement.dataset.theme, false);
-renderProfiles();
+ageValue.textContent = ageRange.value;
+loadProfiles();
