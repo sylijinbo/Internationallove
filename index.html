@@ -83,7 +83,7 @@
 
           <form class="filter-form" id="filterForm">
             <label>
-              <span>我来自</span>
+              <span>我来自：</span>
               <select id="homeFilter" name="home">
                 <option value="all">不限地区</option>
                 <option value="中国">中国</option>
@@ -94,7 +94,7 @@
             </label>
 
             <label>
-              <span>希望对方所在国家</span>
+              <span>希望对方所在国家：</span>
               <select id="countryFilter" name="country">
                 <option value="all">不限国家</option>
                 <option value="美国">美国</option>
@@ -108,7 +108,15 @@
             </label>
 
             <label>
-              <span>沟通语言</span>
+              <span>寻找对象：</span>
+              <select id="genderFilter" name="gender">
+                <option value="male" selected>男性</option>
+                <option value="female">女性</option>
+              </select>
+            </label>
+
+            <label>
+              <span>沟通语言：</span>
               <select id="languageFilter" name="language">
                 <option value="all">不限语言</option>
                 <option value="中文">中文</option>
@@ -120,7 +128,7 @@
             </label>
 
             <label>
-              <span>关系目标</span>
+              <span>关系目标：</span>
               <select id="intentFilter" name="intent">
                 <option value="all">不限目标</option>
                 <option value="结婚">结婚</option>
@@ -158,13 +166,6 @@
               <p class="eyebrow">Curated Members</p>
               <h2 id="membersTitle">精选会员</h2>
             </div>
-            <label class="search-box">
-              <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24">
-                <circle cx="11" cy="11" r="8"></circle>
-                <path d="m21 21-4.3-4.3"></path>
-              </svg>
-              <input id="searchInput" type="search" placeholder="搜索国家、城市、标签" />
-            </label>
           </div>
 
           <div class="segmented-control" role="tablist" aria-label="会员视图">

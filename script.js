@@ -119,10 +119,10 @@ const memberSelectFields = [
 const controls = {
   home: document.querySelector("#homeFilter"),
   country: document.querySelector("#countryFilter"),
+  gender: document.querySelector("#genderFilter"),
   language: document.querySelector("#languageFilter"),
   intent: document.querySelector("#intentFilter"),
   verified: document.querySelector("#verifiedFilter"),
-  search: document.querySelector("#searchInput"),
 };
 
 function escapeHtml(value) {
@@ -275,6 +275,7 @@ function mapMember(member, usedQuotes = new Set()) {
     name: member.legal_name || member.display_name,
     cnName: member.display_name,
     age: Number(member.age),
+    gender: member.gender || "",
     country: member.country || "",
     stateRegion: member.state_region || "",
     city: member.city || "",
@@ -417,29 +418,6 @@ function applyTheme(theme, shouldPersist = true) {
 }
 
 function matchesFilters(profile) {
-  const searchTerm = controls.search.value.trim().toLowerCase();
-  const searchable = [
-    profile.name,
-    profile.cnName,
-    profile.country,
-    profile.city,
-    profile.stateRegion,
-    profile.home,
-    profile.education,
-    profile.occupation,
-    profile.maritalStatus,
-    profile.housing,
-    profile.faith,
-    profile.smoking,
-    profile.drinking,
-    profile.intent,
-    profile.relocation,
-    ...profile.languages,
-    ...profile.tags,
-  ]
-    .join(" ")
-    .toLowerCase();
-
   const modeMatch =
     state.mode === "featured" ||
     (state.mode === "new" && profile.isNew) ||
@@ -449,11 +427,11 @@ function matchesFilters(profile) {
     modeMatch &&
     (controls.home.value === "all" || profile.home === controls.home.value) &&
     (controls.country.value === "all" || profile.country === controls.country.value) &&
+    profile.gender === controls.gender.value &&
     (controls.language.value === "all" || profile.languages.includes(controls.language.value)) &&
     (controls.intent.value === "all" || profile.intent === controls.intent.value) &&
     (!controls.verified.checked || profile.verified) &&
-    profile.age <= Number(ageRange.value) &&
-    (!searchTerm || searchable.includes(searchTerm))
+    profile.age <= Number(ageRange.value)
   );
 }
 
