@@ -57,6 +57,30 @@ const autoQuoteTemplates = [
   "欣赏温和真诚的相处方式，也愿意为长期承诺投入时间。",
   "希望和价值观相近的人慢慢了解，建立踏实而稳定的生活。",
   "相信好的关系来自坦诚沟通，也期待一起创造温暖的家庭。",
+  "愿意从真诚交流开始，和合适的人一起走向稳定未来。",
+  "看重责任感和生活态度，希望关系能在理解中自然深入。",
+  "期待遇见成熟可靠的人，一起经营简单、踏实、有温度的日子。",
+  "珍惜坦诚和陪伴，希望未来的关系既稳定也有彼此支持。",
+  "希望与认真对待感情的人相识，共同建立清晰而长久的承诺。",
+  "重视信任、尊重和家庭观念，期待遇见方向一致的伴侣。",
+  "相信相处舒服很重要，也愿意为稳定关系付出耐心。",
+  "期待在互相欣赏和理解中，慢慢建立值得托付的关系。",
+  "希望未来生活有共同目标，也有日常里温和踏实的陪伴。",
+  "认真看待婚姻与家庭，期待遇见同样真诚坚定的人。",
+  "愿意用开放和坦率的沟通，了解一段关系真正的可能。",
+  "欣赏善良、成熟、有责任心的人，也期待一起面对未来。",
+  "希望遇见能彼此支持的人，把平凡生活过得安稳有爱。",
+  "看重长期承诺和家庭责任，期待一段清楚、真诚的关系。",
+  "相信好的感情需要信任和行动，也愿意认真经营彼此。",
+  "希望与价值观相近的人相识，在稳定关系中共同成长。",
+  "期待遇见愿意沟通、愿意承担，也愿意珍惜家庭的人。",
+  "重视真实相处，希望关系从了解开始，走向长久陪伴。",
+  "希望未来的伴侣真诚可靠，能一起规划生活也分享日常。",
+  "期待一段温和坚定的关系，在尊重和责任中慢慢靠近。",
+  "相信合适的人会让生活更安定，也更有一起前进的力量。",
+  "愿意认真认识对方，期待建立有信任、有承诺的未来。",
+  "希望遇见心态成熟的人，一起经营稳定而有爱的家庭。",
+  "珍惜真诚、稳定和共同目标，期待与合适的人携手向前。",
 ];
 const memberSelectFields = [
   "id",
@@ -171,15 +195,29 @@ function formatDrinking(value) {
   return /不喝|不饮|戒酒|从不|非饮酒/.test(text) ? text : `饮酒为${text}`;
 }
 
+function normalizeQuote(value) {
+  return String(value || "").replace(/\s+/g, " ").trim();
+}
+
 function hashString(value) {
   return String(value || "").split("").reduce((hash, character) => {
     return (hash * 31 + character.charCodeAt(0)) >>> 0;
   }, 0);
 }
 
-function getStableQuote(profile) {
+function getStableQuote(profile, usedQuotes) {
   const seed = [profile.dbId, profile.id, profile.name, profile.age].filter(Boolean).join(":");
-  return autoQuoteTemplates[hashString(seed) % autoQuoteTemplates.length];
+  const startIndex = hashString(seed) % autoQuoteTemplates.length;
+
+  for (let offset = 0; offset < autoQuoteTemplates.length; offset += 1) {
+    const quote = autoQuoteTemplates[(startIndex + offset) % autoQuoteTemplates.length];
+    if (!usedQuotes.has(normalizeQuote(quote))) {
+      usedQuotes.add(normalizeQuote(quote));
+      return quote;
+    }
+  }
+
+  return autoQuoteTemplates[startIndex];
 }
 
 function buildProfileDescription(profile) {
@@ -226,7 +264,7 @@ function getDisplayValue(value, fallback = "未填写") {
   return value === null || value === undefined || value === "" ? fallback : value;
 }
 
-function mapMember(member) {
+function mapMember(member, usedQuotes = new Set()) {
   const photoPaths = normalizeArray(member.photo_paths);
   const primaryPhotoPath = member.primary_photo_path || photoPaths[0] || "";
   const score = Number.isFinite(member.match_score) ? member.match_score : null;
@@ -267,8 +305,10 @@ function mapMember(member) {
     profile.tags = buildAutoTags(profile);
   }
   const generatedDescription = buildProfileDescription(profile);
-  if (!profile.quote) {
-    profile.quote = getStableQuote(profile);
+  if (profile.quote) {
+    usedQuotes.add(normalizeQuote(profile.quote));
+  } else {
+    profile.quote = getStableQuote(profile, usedQuotes);
   }
   if (!profile.about) {
     profile.about = generatedDescription;
@@ -304,7 +344,10 @@ async function fetchMembers() {
   }
 
   const data = await response.json();
-  return Array.isArray(data) ? data.map(mapMember) : [];
+  if (!Array.isArray(data)) return [];
+
+  const usedQuotes = new Set();
+  return data.map((member) => mapMember(member, usedQuotes));
 }
 
 function persistSaved() {

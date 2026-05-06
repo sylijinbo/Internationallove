@@ -15,6 +15,9 @@ if (!window.supabase?.createClient) {
 const memberPhotoBucket = "member-photos";
 const maxPhotoSize = 10 * 1024 * 1024;
 const draftStorageKey = "atlasvowAdminMemberDraft:v1";
+const quoteHistoryStorageKey = "atlasvowAdminQuoteHistory:v1";
+const photoDraftDbName = "atlasvowAdminMemberPhotoDrafts";
+const photoDraftStoreName = "photos";
 const memberSelectFields = [
   "id",
   "slug",
@@ -110,6 +113,30 @@ const autoQuoteTemplates = [
   "欣赏温和真诚的相处方式，也愿意为长期承诺投入时间。",
   "希望和价值观相近的人慢慢了解，建立踏实而稳定的生活。",
   "相信好的关系来自坦诚沟通，也期待一起创造温暖的家庭。",
+  "愿意从真诚交流开始，和合适的人一起走向稳定未来。",
+  "看重责任感和生活态度，希望关系能在理解中自然深入。",
+  "期待遇见成熟可靠的人，一起经营简单、踏实、有温度的日子。",
+  "珍惜坦诚和陪伴，希望未来的关系既稳定也有彼此支持。",
+  "希望与认真对待感情的人相识，共同建立清晰而长久的承诺。",
+  "重视信任、尊重和家庭观念，期待遇见方向一致的伴侣。",
+  "相信相处舒服很重要，也愿意为稳定关系付出耐心。",
+  "期待在互相欣赏和理解中，慢慢建立值得托付的关系。",
+  "希望未来生活有共同目标，也有日常里温和踏实的陪伴。",
+  "认真看待婚姻与家庭，期待遇见同样真诚坚定的人。",
+  "愿意用开放和坦率的沟通，了解一段关系真正的可能。",
+  "欣赏善良、成熟、有责任心的人，也期待一起面对未来。",
+  "希望遇见能彼此支持的人，把平凡生活过得安稳有爱。",
+  "看重长期承诺和家庭责任，期待一段清楚、真诚的关系。",
+  "相信好的感情需要信任和行动，也愿意认真经营彼此。",
+  "希望与价值观相近的人相识，在稳定关系中共同成长。",
+  "期待遇见愿意沟通、愿意承担，也愿意珍惜家庭的人。",
+  "重视真实相处，希望关系从了解开始，走向长久陪伴。",
+  "希望未来的伴侣真诚可靠，能一起规划生活也分享日常。",
+  "期待一段温和坚定的关系，在尊重和责任中慢慢靠近。",
+  "相信合适的人会让生活更安定，也更有一起前进的力量。",
+  "愿意认真认识对方，期待建立有信任、有承诺的未来。",
+  "希望遇见心态成熟的人，一起经营稳定而有爱的家庭。",
+  "珍惜真诚、稳定和共同目标，期待与合适的人携手向前。",
 ];
 
 const usStateNames = new Set([
@@ -291,9 +318,50 @@ function formatDrinking(value) {
   return /不喝|不饮|戒酒|从不|非饮酒/.test(text) ? text : `饮酒为${text}`;
 }
 
+function normalizeQuote(value) {
+  return String(value || "").replace(/\s+/g, " ").trim();
+}
+
+function readQuoteHistory() {
+  try {
+    const history = JSON.parse(localStorage.getItem(quoteHistoryStorageKey) || "[]");
+    return Array.isArray(history) ? history.map(normalizeQuote).filter(Boolean) : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function rememberGeneratedQuote(quote) {
+  const normalizedQuote = normalizeQuote(quote);
+  if (!normalizedQuote) return;
+
+  const history = uniqueValues([normalizedQuote, ...readQuoteHistory()]).slice(0, autoQuoteTemplates.length);
+  try {
+    localStorage.setItem(quoteHistoryStorageKey, JSON.stringify(history));
+  } catch (error) {
+    return;
+  }
+}
+
+function getExistingMemberQuotes() {
+  return state.members
+    .filter((member) => member.id !== state.editingId)
+    .map((member) => normalizeQuote(member.quote))
+    .filter(Boolean);
+}
+
 function getRandomQuote() {
-  const index = Math.floor(Math.random() * autoQuoteTemplates.length);
-  return autoQuoteTemplates[index];
+  const existingQuotes = new Set(getExistingMemberQuotes());
+  const recentQuotes = new Set(readQuoteHistory());
+  const unusedTemplates = autoQuoteTemplates.filter((quote) => {
+    const normalizedQuote = normalizeQuote(quote);
+    return !existingQuotes.has(normalizedQuote) && !recentQuotes.has(normalizedQuote);
+  });
+  const notSavedTemplates = autoQuoteTemplates.filter((quote) => !existingQuotes.has(normalizeQuote(quote)));
+  const pool = unusedTemplates.length ? unusedTemplates : notSavedTemplates.length ? notSavedTemplates : autoQuoteTemplates;
+  const quote = pool[Math.floor(Math.random() * pool.length)];
+  rememberGeneratedQuote(quote);
+  return quote;
 }
 
 function buildAutoDescriptionFromForm() {
@@ -413,12 +481,158 @@ function readDraft() {
   }
 }
 
+function openPhotoDraftDb() {
+  return new Promise((resolve, reject) => {
+    if (!window.indexedDB) {
+      reject(new Error("当前浏览器不支持本地图片暂存。"));
+      return;
+    }
+
+    const request = window.indexedDB.open(photoDraftDbName, 1);
+
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(photoDraftStoreName)) {
+        db.createObjectStore(photoDraftStoreName, { keyPath: "key" });
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error || new Error("图片暂存数据库打开失败。"));
+  });
+}
+
+function withPhotoDraftStore(mode, run) {
+  return openPhotoDraftDb().then(
+    (db) =>
+      new Promise((resolve, reject) => {
+        const transaction = db.transaction(photoDraftStoreName, mode);
+        const store = transaction.objectStore(photoDraftStoreName);
+        let result;
+
+        try {
+          result = run(store);
+        } catch (error) {
+          transaction.abort();
+          db.close();
+          reject(error);
+          return;
+        }
+
+        transaction.oncomplete = () => {
+          db.close();
+          resolve(result);
+        };
+        transaction.onerror = () => {
+          db.close();
+          reject(transaction.error || new Error("图片暂存失败。"));
+        };
+        transaction.onabort = () => {
+          db.close();
+          reject(transaction.error || new Error("图片暂存已取消。"));
+        };
+      })
+  );
+}
+
+function cacheDraftPhoto(photo) {
+  if (!photo?.file) return Promise.resolve();
+
+  return withPhotoDraftStore("readwrite", (store) => {
+    store.put({
+      key: photo.key,
+      name: photo.name,
+      file: photo.file,
+      fileName: photo.file.name,
+      type: photo.file.type,
+      size: photo.file.size,
+      lastModified: photo.file.lastModified,
+      savedAt: new Date().toISOString(),
+    });
+  });
+}
+
+function getCachedDraftPhotos(keys) {
+  const uniqueKeys = uniqueValues(keys);
+  if (!uniqueKeys.length) return Promise.resolve(new Map());
+
+  return withPhotoDraftStore("readonly", (store) => {
+    const records = new Map();
+    uniqueKeys.forEach((key) => {
+      const request = store.get(key);
+      request.onsuccess = () => {
+        if (request.result) {
+          records.set(key, request.result);
+        }
+      };
+    });
+    return records;
+  });
+}
+
+function removeCachedDraftPhoto(key) {
+  if (!key) return Promise.resolve();
+  return withPhotoDraftStore("readwrite", (store) => store.delete(key));
+}
+
+function clearCachedDraftPhotos() {
+  return withPhotoDraftStore("readwrite", (store) => store.clear());
+}
+
+function getLocalPhotoDrafts() {
+  return state.localPhotos.map((photo) => ({
+    key: photo.key,
+    name: photo.name,
+    fileName: photo.file?.name || photo.name,
+    type: photo.file?.type || "",
+    size: photo.file?.size || 0,
+    lastModified: photo.file?.lastModified || null,
+  }));
+}
+
+function getDraftLocalPhotoRefs(draft) {
+  if (Array.isArray(draft.localPhotos)) {
+    return draft.localPhotos.filter((photo) => photo?.key);
+  }
+
+  return [];
+}
+
+async function restoreLocalPhotosFromDraft(draft) {
+  const localPhotoRefs = getDraftLocalPhotoRefs(draft);
+  if (!localPhotoRefs.length) return [];
+
+  try {
+    const cachedRecords = await getCachedDraftPhotos(localPhotoRefs.map((photo) => photo.key));
+    return localPhotoRefs
+      .map((photo) => {
+        const record = cachedRecords.get(photo.key);
+        const file = record?.file;
+        if (!file) return null;
+
+        return {
+          key: photo.key,
+          source: "local",
+          file,
+          url: URL.createObjectURL(file),
+          name: photo.name || record.name || file.name,
+        };
+      })
+      .filter(Boolean);
+  } catch (error) {
+    console.warn("Local photo draft restore failed", error);
+    return [];
+  }
+}
+
 function clearDraft() {
   try {
     localStorage.removeItem(draftStorageKey);
   } catch (error) {
     return false;
   }
+  clearCachedDraftPhotos().catch((error) => {
+    console.warn("Photo draft cleanup failed", error);
+  });
   return true;
 }
 
@@ -444,12 +658,13 @@ function hasDraftContent(values) {
 function saveDraft() {
   const values = collectFormValues();
   const existingPhotoPaths = state.existingPhotos.map((photo) => photo.path);
-  const localPhotoNames = state.localPhotos.map((photo) => photo.name);
+  const localPhotos = getLocalPhotoDrafts();
+  const localPhotoNames = localPhotos.map((photo) => photo.name);
   const shouldSave =
     hasDraftContent(values) ||
     els.smartInput.value.trim() ||
     existingPhotoPaths.length ||
-    localPhotoNames.length ||
+    localPhotos.length ||
     state.editingId;
 
   if (!shouldSave) {
@@ -465,6 +680,7 @@ function saveDraft() {
     existingPhotoPaths,
     removedExistingPaths: state.removedExistingPaths,
     primaryKey: state.primaryKey,
+    localPhotos,
     localPhotoNames,
   };
 
@@ -475,13 +691,12 @@ function saveDraft() {
   }
 }
 
-function restoreDraft() {
+async function restoreDraft() {
   const draft = readDraft();
   if (!draft) return false;
 
   revokeLocalPhotoUrls();
   state.editingId = draft.editingId || null;
-  state.localPhotos = [];
   state.removedExistingPaths = Array.isArray(draft.removedExistingPaths)
     ? draft.removedExistingPaths
     : [];
@@ -494,9 +709,10 @@ function restoreDraft() {
         name: path.split("/").pop() || "照片",
       }))
     : [];
-  state.primaryKey = state.existingPhotos.some((photo) => photo.key === draft.primaryKey)
+  state.localPhotos = await restoreLocalPhotosFromDraft(draft);
+  state.primaryKey = getAllPhotos().some((photo) => photo.key === draft.primaryKey)
     ? draft.primaryKey
-    : state.existingPhotos[0]?.key || "";
+    : getAllPhotos()[0]?.key || "";
 
   els.memberForm.reset();
   Object.entries(draft.values || {}).forEach(([name, value]) => setField(name, value));
@@ -508,10 +724,19 @@ function restoreDraft() {
   updateMissingFields();
   renderMemberList();
 
-  const localPhotoCount = Array.isArray(draft.localPhotoNames) ? draft.localPhotoNames.length : 0;
-  state.restoredDraftNotice = localPhotoCount
-    ? `已恢复文字草稿；${localPhotoCount} 张本地图片需要重新选择。`
-    : "已恢复上次未保存的草稿。";
+  const localPhotoRefs = getDraftLocalPhotoRefs(draft);
+  const legacyLocalPhotoCount =
+    !localPhotoRefs.length && Array.isArray(draft.localPhotoNames) ? draft.localPhotoNames.length : 0;
+  const expectedLocalPhotoCount = localPhotoRefs.length || legacyLocalPhotoCount;
+  if (expectedLocalPhotoCount && state.localPhotos.length === expectedLocalPhotoCount) {
+    state.restoredDraftNotice = `已恢复上次未保存的草稿，包括 ${state.localPhotos.length} 张本地图片。`;
+  } else if (expectedLocalPhotoCount && state.localPhotos.length) {
+    state.restoredDraftNotice = `已恢复文字草稿和 ${state.localPhotos.length}/${expectedLocalPhotoCount} 张本地图片；其余图片需要重新选择。`;
+  } else if (expectedLocalPhotoCount) {
+    state.restoredDraftNotice = `已恢复文字草稿；${expectedLocalPhotoCount} 张本地图片需要重新选择。`;
+  } else {
+    state.restoredDraftNotice = "已恢复上次未保存的草稿。";
+  }
   setSuccess(state.restoredDraftNotice, els.adminMessage);
   return true;
 }
@@ -550,7 +775,7 @@ async function init() {
       setError(`会话读取失败：${getFriendlyErrorMessage(error)}`, els.loginMessage);
       return;
     }
-    applySession(data.session);
+    await applySession(data.session);
 
     client.auth.onAuthStateChange((_event, session) => {
       applySession(session);
@@ -560,7 +785,7 @@ async function init() {
   }
 }
 
-function applySession(session) {
+async function applySession(session) {
   state.session = session;
   const isSignedIn = Boolean(session);
   setVisible(els.loginView, !isSignedIn);
@@ -570,7 +795,7 @@ function applySession(session) {
 
   if (isSignedIn) {
     setSuccess("登录成功，正在加载会员资料...", els.adminMessage);
-    if (!restoreDraft()) {
+    if (!(await restoreDraft())) {
       resetEditor();
     }
     loadMembers();
@@ -595,7 +820,7 @@ async function handleLogin(event) {
     }
 
     setSuccess("登录成功，正在进入后台...", els.loginMessage);
-    applySession(data.session);
+    await applySession(data.session);
   } catch (error) {
     setError(`登录失败：${getFriendlyErrorMessage(error)}`, els.loginMessage);
   } finally {
@@ -692,6 +917,9 @@ function resetEditor(options = {}) {
   state.primaryKey = "";
   state.restoredDraftNotice = "";
   els.memberForm.reset();
+  els.smartInput.value = "";
+  els.folderInput.value = "";
+  els.photoInput.value = "";
   setField("status", "published");
   els.formTitle.textContent = "新增会员";
   els.downMemberButton.hidden = true;
@@ -752,6 +980,8 @@ function editMember(memberId) {
     is_new: member.is_new,
   }).forEach(([name, value]) => setField(name, value));
 
+  els.smartInput.value = "";
+  els.parseNotes.innerHTML = "";
   els.formTitle.textContent = `编辑 ${member.display_name || "会员"}`;
   els.downMemberButton.hidden = false;
   renderPhotos();
@@ -768,10 +998,12 @@ function isAcceptedImage(file) {
   );
 }
 
-function addLocalFiles(fileList) {
+async function addLocalFiles(fileList) {
   const files = Array.from(fileList || []);
   const accepted = [];
   const skipped = [];
+
+  if (!files.length) return;
 
   files.forEach((file) => {
     if (!isAcceptedImage(file)) {
@@ -793,19 +1025,31 @@ function addLocalFiles(fileList) {
     });
   });
 
+  if (!accepted.length) {
+    updateMissingFields();
+    saveDraft();
+    setStatus(skipped.length ? `未加入图片：${skipped.join("；")}` : "没有选择图片。");
+    return;
+  }
+
   state.localPhotos.push(...accepted);
   if (!state.primaryKey && accepted[0]) {
     state.primaryKey = accepted[0].key;
   }
 
+  const cacheResults = await Promise.allSettled(accepted.map((photo) => cacheDraftPhoto(photo)));
+  const failedCacheCount = cacheResults.filter((result) => result.status === "rejected").length;
   renderPhotos();
   updateMissingFields();
   saveDraft();
-  setStatus(
-    skipped.length
-      ? `已加入 ${accepted.length} 张图片，跳过：${skipped.join("；")}`
-      : `已加入 ${accepted.length} 张图片。`
-  );
+  const statusParts = [`已加入 ${accepted.length} 张图片`];
+  if (skipped.length) {
+    statusParts.push(`跳过：${skipped.join("；")}`);
+  }
+  if (failedCacheCount) {
+    statusParts.push(`其中 ${failedCacheCount} 张没有成功暂存，离开页面后可能需要重新选择`);
+  }
+  setStatus(`${statusParts.join("；")}。`);
 }
 
 function revokeLocalPhotoUrls() {
@@ -817,6 +1061,9 @@ function removePhoto(photoKey) {
   const existingPhoto = state.existingPhotos.find((photo) => photo.key === photoKey);
   if (localPhoto) {
     URL.revokeObjectURL(localPhoto.url);
+    removeCachedDraftPhoto(localPhoto.key).catch((error) => {
+      console.warn("Photo draft delete failed", error);
+    });
   }
   if (existingPhoto) {
     state.removedExistingPaths.push(existingPhoto.path);
@@ -1129,7 +1376,7 @@ function sanitizeFileName(name, fallbackExtension = "jpg") {
 
 function buildStoragePath(slug, photo, index) {
   const extension = photo.file.type === "image/png" ? "png" : photo.file.type === "image/webp" ? "webp" : "jpg";
-  return `members/${slug}/${Date.now()}-${index}-${sanitizeFileName(photo.file.name, extension)}`;
+  return `members/${slug}/${Date.now()}-${index}-${sanitizeFileName(photo.file.name || photo.name, extension)}`;
 }
 
 async function parseUploadError(response) {
@@ -1350,13 +1597,13 @@ els.clearSmartButton.addEventListener("click", () => {
 
 els.smartInput.addEventListener("input", saveDraft);
 
-els.folderInput.addEventListener("change", (event) => {
-  addLocalFiles(event.target.files);
+els.folderInput.addEventListener("change", async (event) => {
+  await addLocalFiles(event.target.files);
   event.target.value = "";
 });
 
-els.photoInput.addEventListener("change", (event) => {
-  addLocalFiles(event.target.files);
+els.photoInput.addEventListener("change", async (event) => {
+  await addLocalFiles(event.target.files);
   event.target.value = "";
 });
 
