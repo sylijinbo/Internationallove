@@ -22,6 +22,14 @@ alter table public.members
 alter table public.appointments
   add column if not exists interested_member_ids uuid[] not null default '{}';
 
+alter table public.appointments
+  add column if not exists customer_name text,
+  add column if not exists contact text,
+  add column if not exists interested_member text,
+  add column if not exists source_url text,
+  add column if not exists user_agent text,
+  add column if not exists form_payload jsonb not null default '{}'::jsonb;
+
 do $$
 begin
   if not exists (
@@ -41,7 +49,7 @@ alter table public.appointments enable row level security;
 grant usage on schema public to anon, authenticated;
 grant select on public.members to anon, authenticated;
 grant insert, update on public.members to authenticated;
-grant usage, select on all sequences in schema public to authenticated;
+grant usage, select on all sequences in schema public to anon, authenticated;
 
 drop policy if exists "Public can read published members" on public.members;
 create policy "Public can read published members"

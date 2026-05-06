@@ -381,6 +381,31 @@ async function createAppointment(payload) {
   }
 }
 
+function getAppointmentErrorMessage(error) {
+  const message = error?.message || String(error || "未知错误");
+
+  if (/row-level security|violates row-level security/i.test(message)) {
+    return "预约提交被数据库权限策略拦截。请重新执行 admin/supabase-setup.sql 后再试。";
+  }
+  if (/permission denied for sequence/i.test(message)) {
+    return "预约编号权限未开放。请重新执行 admin/supabase-setup.sql，里面已补充 anon 的 sequence 权限。";
+  }
+  if (/permission denied for table appointments/i.test(message)) {
+    return "appointments 表还没有开放公开预约写入权限。请重新执行 admin/supabase-setup.sql。";
+  }
+  if (/interested_member_ids|form_payload|source_url|user_agent|column/i.test(message)) {
+    return `预约表字段还没更新：${message}。请重新执行 admin/supabase-setup.sql。`;
+  }
+  if (/not-null|null value/i.test(message)) {
+    return `预约表有必填字段未兼容：${message}。请重新执行 admin/supabase-setup.sql。`;
+  }
+  if (/failed to fetch|network/i.test(message)) {
+    return "网络请求失败，请确认当前页面可以访问 Supabase。";
+  }
+
+  return `预约提交失败：${message}`;
+}
+
 function applyTheme(theme, shouldPersist = true) {
   const nextTheme = availableThemes.has(theme) ? theme : defaultTheme;
   document.documentElement.dataset.theme = nextTheme;
@@ -875,6 +900,7 @@ document.querySelector("#consult").addEventListener("submit", async (event) => {
   const selectedMemberText = selectedMembers
     .map((member) => [member.display_name, member.location].filter(Boolean).join(" · "))
     .join("；");
+  const interestedMemberText = selectedMemberText || "未选择会员";
 
   if (!name || !contact) {
     formMessage.textContent = "请填写称呼和联系方式。";
@@ -894,13 +920,13 @@ document.querySelector("#consult").addEventListener("submit", async (event) => {
     await createAppointment({
       customer_name: name,
       contact,
-      interested_member: selectedMemberText || null,
+      interested_member: interestedMemberText,
       interested_member_ids: selectedMemberIds,
       source_url: window.location.href,
       user_agent: navigator.userAgent,
       form_payload: {
         selected_members: selectedMembers,
-        interested_member: selectedMemberText || null,
+        interested_member: interestedMemberText,
       },
     });
 
@@ -910,7 +936,7 @@ document.querySelector("#consult").addEventListener("submit", async (event) => {
     renderSelectedMembers();
   } catch (error) {
     console.error(error);
-    formMessage.textContent = "预约暂时没有提交成功，请稍后再试。";
+    formMessage.textContent = getAppointmentErrorMessage(error);
   } finally {
     submitButton.disabled = false;
     submitButton.removeAttribute("aria-busy");
