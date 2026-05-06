@@ -141,6 +141,36 @@ function buildAutoTags(profile) {
   ]).slice(0, 4);
 }
 
+function sentenceFromParts(parts) {
+  const text = parts.filter(Boolean).join("，");
+  return text ? `${text}。` : "";
+}
+
+function formatEducation(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  return /教育|学历|学位|毕业/.test(text) ? `受过${text}` : `受过${text}教育`;
+}
+
+function formatOccupation(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  return /工作|职业|行业/.test(text) ? `目前从事${text}` : `目前从事${text}工作`;
+}
+
+function formatChildren(value) {
+  if (value === null || value === undefined || value === "") return "";
+  const count = Number(value);
+  if (!Number.isFinite(count)) return "";
+  return count === 0 ? "没有孩子" : `有${count}个孩子`;
+}
+
+function formatDrinking(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  return /不喝|不饮|戒酒|从不|非饮酒/.test(text) ? text : `饮酒为${text}`;
+}
+
 function hashString(value) {
   return String(value || "").split("").reduce((hash, character) => {
     return (hash * 31 + character.charCodeAt(0)) >>> 0;
@@ -150,6 +180,30 @@ function hashString(value) {
 function getStableQuote(profile) {
   const seed = [profile.dbId, profile.id, profile.name, profile.age].filter(Boolean).join(":");
   return autoQuoteTemplates[hashString(seed) % autoQuoteTemplates.length];
+}
+
+function buildProfileDescription(profile) {
+  const displayName = profile.cnName || profile.name || "该会员";
+  const location = [profile.country, profile.stateRegion, profile.city].filter(Boolean).join("");
+  const intro = sentenceFromParts([
+    location ? `${displayName} 现居${location}` : displayName,
+    formatEducation(profile.education),
+    formatOccupation(profile.occupation),
+  ]);
+  const profileDetails = sentenceFromParts([
+    profile.heightCm ? `身高 ${profile.heightCm}cm` : "",
+    profile.weightLb ? `体重 ${profile.weightLb}lb` : "",
+    profile.maritalStatus,
+    formatChildren(profile.childrenCount),
+    profile.housing ? `居住在${profile.housing}` : "",
+  ]);
+  const lifestyle = sentenceFromParts([
+    profile.faith ? `信仰${profile.faith}` : "",
+    profile.smoking,
+    formatDrinking(profile.drinking),
+  ]);
+
+  return [intro, profileDetails, lifestyle].filter(Boolean).join("");
 }
 
 function encodeStoragePath(path) {
@@ -212,8 +266,12 @@ function mapMember(member) {
   if (!profile.tags.length) {
     profile.tags = buildAutoTags(profile);
   }
+  const generatedDescription = buildProfileDescription(profile);
   if (!profile.quote) {
     profile.quote = getStableQuote(profile);
+  }
+  if (!profile.about) {
+    profile.about = generatedDescription;
   }
   return profile;
 }

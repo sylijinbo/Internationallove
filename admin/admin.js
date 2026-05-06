@@ -262,9 +262,83 @@ function buildAutoTagsFromForm() {
   ]).slice(0, 4);
 }
 
+function sentenceFromParts(parts) {
+  const text = parts.filter(Boolean).join("，");
+  return text ? `${text}。` : "";
+}
+
+function formatEducation(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  return /教育|学历|学位|毕业/.test(text) ? `受过${text}` : `受过${text}教育`;
+}
+
+function formatOccupation(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  return /工作|职业|行业/.test(text) ? `目前从事${text}` : `目前从事${text}工作`;
+}
+
+function formatChildren(value) {
+  const count = numberOrNull(value);
+  if (count === null) return "";
+  return count === 0 ? "没有孩子" : `有${count}个孩子`;
+}
+
+function formatDrinking(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  return /不喝|不饮|戒酒|从不|非饮酒/.test(text) ? text : `饮酒为${text}`;
+}
+
 function getRandomQuote() {
   const index = Math.floor(Math.random() * autoQuoteTemplates.length);
   return autoQuoteTemplates[index];
+}
+
+function buildAutoDescriptionFromForm() {
+  const displayName = getValue("display_name") || getValue("legal_name") || "该会员";
+  const location = [getValue("country"), getValue("state_region"), getValue("city")]
+    .filter(Boolean)
+    .join("");
+  const height = numberOrNull(getValue("height_cm"));
+  const weight = numberOrNull(getValue("weight_lb"));
+
+  const intro = sentenceFromParts([
+    location ? `${displayName} 现居${location}` : displayName,
+    formatEducation(getValue("education")),
+    formatOccupation(getValue("occupation")),
+  ]);
+  const profile = sentenceFromParts([
+    height ? `身高 ${height}cm` : "",
+    weight ? `体重 ${weight}lb` : "",
+    getValue("marital_status"),
+    formatChildren(getValue("children_count")),
+    getValue("housing") ? `居住在${getValue("housing")}` : "",
+  ]);
+  const lifestyle = sentenceFromParts([
+    getValue("faith") ? `信仰${getValue("faith")}` : "",
+    getValue("smoking"),
+    formatDrinking(getValue("drinking")),
+  ]);
+
+  return [intro, profile, lifestyle].filter(Boolean).join("");
+}
+
+function fillGeneratedProfileText() {
+  const description = buildAutoDescriptionFromForm();
+  if (description && !getValue("about")) {
+    setField("about", description);
+  }
+  if (!getValue("quote")) {
+    setField("quote", getRandomQuote());
+  }
+  if (!getValue("tags")) {
+    const tags = buildAutoTagsFromForm();
+    if (tags.length) {
+      setField("tags", tags);
+    }
+  }
 }
 
 function getLocationLabel(member) {
@@ -940,6 +1014,7 @@ function parseSmartText() {
   els.parseNotes.innerHTML = notes.length
     ? notes.map((item) => `<li>${escapeHtml(item)}</li>`).join("")
     : `<li>没有待处理内容。</li>`;
+  fillGeneratedProfileText();
   updateMissingFields();
   updatePrimaryPreview();
   saveDraft();
@@ -1116,8 +1191,10 @@ async function uploadLocalPhotos(slug) {
 
 function buildMemberPayload(slug, photoPaths, primaryPhotoPath) {
   const displayName = getValue("display_name");
+  const description = buildAutoDescriptionFromForm();
   const tags = splitList(getValue("tags"));
   const quote = getValue("quote");
+  const about = getValue("about");
   return {
     display_name: displayName,
     legal_name: getValue("legal_name") || displayName,
@@ -1146,7 +1223,7 @@ function buildMemberPayload(slug, photoPaths, primaryPhotoPath) {
     is_verified: getField("is_verified").checked,
     is_new: getField("is_new").checked,
     quote: quote || getRandomQuote(),
-    about: getValue("about") || null,
+    about: about || description || null,
     primary_photo_path: primaryPhotoPath,
     photo_paths: photoPaths,
   };
@@ -1154,6 +1231,7 @@ function buildMemberPayload(slug, photoPaths, primaryPhotoPath) {
 
 async function handleSave(event) {
   event.preventDefault();
+  fillGeneratedProfileText();
   const missing = getMissingFields();
   if (missing.length) {
     updateMissingFields();
