@@ -487,6 +487,7 @@ function createCardMarkup(profile) {
   const age = escapeHtml(profile.age);
   const location = escapeHtml(getLocationLabel(profile) || profile.country);
   const intent = escapeHtml(profile.intent);
+  const tagsMarkup = profile.tags.slice(0, 4).map((tag) => `<span>${escapeHtml(tag)}</span>`).join("");
   const scoreMarkup =
     profile.score === null
       ? ""
@@ -510,16 +511,16 @@ function createCardMarkup(profile) {
       </div>
       <div class="profile-body">
         <div class="profile-topline">
-          <div>
-            <h3>${profileName} · ${age}</h3>
-            <p class="profile-meta">${location} · ${intent}</p>
+          <div class="profile-heading">
+            <h3><span>${profileName}</span><span>${age}</span></h3>
+            <p class="profile-meta"><span>${location}</span><span>${intent}</span></p>
           </div>
           <button class="favorite-button ${saved ? "is-saved" : ""}" type="button" data-save="${profileId}" aria-label="${saved ? "取消收藏" : "收藏"}${profileName}">
             <i data-lucide="heart"></i>
           </button>
         </div>
         <div class="tag-list">
-          ${profile.tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}
+          ${tagsMarkup}
         </div>
         ${compatibilityMarkup}
         <p class="profile-quote">${escapeHtml(profile.quote)}</p>
