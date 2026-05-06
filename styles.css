@@ -285,7 +285,6 @@ button {
 .consult-form button svg,
 .profile-actions button svg,
 .dialog-action svg,
-.search-box svg,
 .trust-grid svg,
 .dialog-close svg {
   display: block;
@@ -378,14 +377,12 @@ button {
 
 .filter-form select,
 .filter-form input[type="range"],
-.consult-form input,
-.search-box input {
+.consult-form input {
   width: 100%;
 }
 
 .filter-form select,
-.consult-form input,
-.search-box {
+.consult-form input {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--control-bg);
@@ -470,24 +467,6 @@ input[type="range"] {
 .members-toolbar h2,
 .section-heading h2 {
   font-size: 32px;
-}
-
-.search-box {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  justify-self: stretch;
-  width: 100%;
-  min-height: 44px;
-  padding: 0 12px;
-  color: var(--muted);
-}
-
-.search-box input {
-  min-width: 0;
-  border: 0;
-  outline: 0;
-  color: var(--ink);
 }
 
 .segmented-control {
