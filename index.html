@@ -217,15 +217,36 @@
             </ol>
           </div>
 
-          <form id="consult" class="consult-form">
+          <form id="consult" class="consult-form" novalidate>
             <h3>预约初谈</h3>
             <label>
               <span>称呼</span>
-              <input type="text" name="name" placeholder="你的称呼" required />
+              <input
+                type="text"
+                name="name"
+                placeholder="你的称呼"
+                data-required-message="请填写你的称呼。"
+                aria-describedby="nameError"
+                required
+              />
+              <small class="field-error" id="nameError" data-error-for="name" aria-live="polite"></small>
             </label>
             <label>
               <span>联系方式</span>
-              <input type="text" name="contact" placeholder="邮箱或手机" required />
+              <input
+                type="text"
+                name="contact"
+                placeholder="邮箱或手机"
+                data-required-message="请填写联系方式。"
+                aria-describedby="contactError"
+                required
+              />
+              <small
+                class="field-error"
+                id="contactError"
+                data-error-for="contact"
+                aria-live="polite"
+              ></small>
             </label>
             <div class="selected-members-field" aria-live="polite">
               <div class="selected-members-heading">

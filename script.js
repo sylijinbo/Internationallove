@@ -834,9 +834,13 @@ function renderSelectedMembers() {
 
   selectedMembersList.innerHTML = state.selectedMembers
     .map(
-      (member) => `
-        <span class="selected-member-chip">
-          <span>${escapeHtml(getAppointmentMemberLabel(member))}</span>
+      (member, index) => `
+        <span class="selected-member-row">
+          <span class="selected-member-index">${index + 1}</span>
+          <span class="selected-member-info">
+            <strong>${escapeHtml(member.name)}</strong>
+            <small>${escapeHtml(member.location || "地区未填写")}</small>
+          </span>
           <button type="button" data-remove-member="${escapeHtml(member.dbId)}" aria-label="移除${escapeHtml(member.name)}">
             <i data-lucide="x"></i>
           </button>
@@ -883,6 +887,81 @@ function activateIcons() {
   if (window.lucide) {
     window.lucide.createIcons();
   }
+}
+
+function getLocalizedValidationMessage(field) {
+  if (field.required && !String(field.value || "").trim()) {
+    return field.dataset.requiredMessage || "请填写此字段。";
+  }
+
+  if (field.validity.typeMismatch) {
+    return "请填写有效的联系方式。";
+  }
+
+  return "";
+}
+
+function getFieldErrorElement(field) {
+  if (!field.form || !field.name) return null;
+  return field.form.querySelector(`[data-error-for="${field.name}"]`);
+}
+
+function setFieldError(field, message) {
+  field.setCustomValidity("");
+  if (message) {
+    field.setAttribute("aria-invalid", "true");
+  } else {
+    field.removeAttribute("aria-invalid");
+  }
+
+  const error = getFieldErrorElement(field);
+  if (error) {
+    error.textContent = message;
+    error.classList.toggle("is-visible", Boolean(message));
+  }
+}
+
+function validateLocalizedField(field) {
+  const message = getLocalizedValidationMessage(field);
+  setFieldError(field, message);
+
+  return !message;
+}
+
+function setupLocalizedValidation(form) {
+  form.noValidate = true;
+  const fields = [...form.querySelectorAll("input, textarea, select")];
+
+  fields.forEach((field) => {
+    field.addEventListener("invalid", (event) => {
+      event.preventDefault();
+      setFieldError(field, getLocalizedValidationMessage(field));
+    });
+
+    field.addEventListener("input", () => {
+      setFieldError(field, "");
+    });
+
+    field.addEventListener("blur", () => {
+      if (field.getAttribute("aria-invalid") === "true") {
+        validateLocalizedField(field);
+      }
+    });
+  });
+}
+
+function reportLocalizedFormValidity(form) {
+  const fields = [...form.querySelectorAll("input, textarea, select")];
+  const invalidField = fields.find((field) => !validateLocalizedField(field));
+
+  if (!invalidField) {
+    formMessage.textContent = "";
+    return true;
+  }
+
+  formMessage.textContent = "请先完善标红的信息。";
+  invalidField.focus({ preventScroll: false });
+  return false;
 }
 
 document.querySelectorAll(".segmented-control button").forEach((button) => {
@@ -1021,9 +1100,13 @@ document.querySelector("#consult").addEventListener("click", (event) => {
   formMessage.textContent = "已更新感兴趣会员名单。";
 });
 
+setupLocalizedValidation(document.querySelector("#consult"));
+
 document.querySelector("#consult").addEventListener("submit", async (event) => {
   event.preventDefault();
   const form = event.currentTarget;
+  if (!reportLocalizedFormValidity(form)) return;
+
   const submitButton = form.querySelector("button[type='submit']");
   const data = new FormData(form);
   const name = String(data.get("name") || "").trim();
