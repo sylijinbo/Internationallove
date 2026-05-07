@@ -279,14 +279,61 @@ function uniqueValues(values) {
     });
 }
 
+const profileTagRules = {
+  maxCount: 6,
+  maxTagUnits: 10,
+  maxTotalUnits: 44,
+};
+
+function getTagCharUnits(char) {
+  if (/\s/.test(char)) return 0;
+  return /[^\u0000-\u00ff]/.test(char) ? 2 : 1;
+}
+
+function getTagDisplayUnits(value) {
+  return [...String(value || "")].reduce((total, char) => total + getTagCharUnits(char), 0);
+}
+
+function trimTagToDisplay(value) {
+  const text = String(value || "").trim();
+  if (getTagDisplayUnits(text) <= profileTagRules.maxTagUnits) return text;
+
+  let output = "";
+  let units = getTagCharUnits("…");
+  for (const char of text) {
+    const nextUnits = getTagCharUnits(char);
+    if (units + nextUnits > profileTagRules.maxTagUnits) break;
+    output += char;
+    units += nextUnits;
+  }
+  return `${output.trim()}…`;
+}
+
+function normalizeProfileTags(values) {
+  const tags = uniqueValues(uniqueValues(values).map(trimTagToDisplay));
+  const selected = [];
+  let usedUnits = 0;
+
+  for (const tag of tags) {
+    const tagUnits = getTagDisplayUnits(tag);
+    if (selected.length >= profileTagRules.maxCount) break;
+    if (usedUnits + tagUnits > profileTagRules.maxTotalUnits) continue;
+    selected.push(tag);
+    usedUnits += tagUnits;
+  }
+
+  return selected;
+}
+
 function buildAutoTagsFromForm() {
-  return uniqueValues([
+  return normalizeProfileTags([
     getValue("education"),
     getValue("occupation"),
     getValue("faith"),
     getValue("smoking"),
+    formatChildren(getValue("children_count")),
     getValue("housing"),
-  ]).slice(0, 4);
+  ]);
 }
 
 function sentenceFromParts(parts) {
@@ -365,7 +412,6 @@ function getRandomQuote() {
 }
 
 function buildAutoDescriptionFromForm() {
-  const displayName = getValue("display_name") || getValue("legal_name") || "该会员";
   const location = [getValue("country"), getValue("state_region"), getValue("city")]
     .filter(Boolean)
     .join("");
@@ -373,7 +419,7 @@ function buildAutoDescriptionFromForm() {
   const weight = numberOrNull(getValue("weight_lb"));
 
   const intro = sentenceFromParts([
-    location ? `${displayName} 现居${location}` : displayName,
+    location ? `现居${location}` : "",
     formatEducation(getValue("education")),
     formatOccupation(getValue("occupation")),
   ]);
@@ -407,6 +453,14 @@ function fillGeneratedProfileText() {
       setField("tags", tags);
     }
   }
+}
+
+function getNormalizedTagsFromForm() {
+  return normalizeProfileTags(splitList(getValue("tags")));
+}
+
+function normalizeTagsField() {
+  setField("tags", getNormalizedTagsFromForm());
 }
 
 function getLocationLabel(member) {
@@ -973,7 +1027,7 @@ function editMember(memberId) {
     smoking: member.smoking,
     drinking: member.drinking,
     languages: member.languages || [],
-    tags: member.tags || [],
+    tags: normalizeProfileTags(member.tags || []),
     quote: member.quote,
     about: member.about,
     is_verified: member.is_verified,
@@ -1326,7 +1380,7 @@ function applyParsedField(key, value) {
   }
 
   if (["标签", "tags"].includes(key)) {
-    setField("tags", splitList(value));
+    setField("tags", normalizeProfileTags(splitList(value)));
     return true;
   }
 
@@ -1439,7 +1493,7 @@ async function uploadLocalPhotos(slug) {
 function buildMemberPayload(slug, photoPaths, primaryPhotoPath) {
   const displayName = getValue("display_name");
   const description = buildAutoDescriptionFromForm();
-  const tags = splitList(getValue("tags"));
+  const tags = getNormalizedTagsFromForm();
   const quote = getValue("quote");
   const about = getValue("about");
   return {
@@ -1479,6 +1533,7 @@ function buildMemberPayload(slug, photoPaths, primaryPhotoPath) {
 async function handleSave(event) {
   event.preventDefault();
   fillGeneratedProfileText();
+  normalizeTagsField();
   const missing = getMissingFields();
   if (missing.length) {
     updateMissingFields();
@@ -1576,6 +1631,10 @@ els.newMemberButton.addEventListener("click", () => {
 });
 els.memberForm.addEventListener("submit", handleSave);
 els.downMemberButton.addEventListener("click", handleDownMember);
+getField("tags").addEventListener("blur", () => {
+  normalizeTagsField();
+  saveDraft();
+});
 
 els.memberList.addEventListener("click", (event) => {
   const editButton = event.target.closest("[data-edit]");

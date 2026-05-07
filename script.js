@@ -17,18 +17,8 @@ function writeStorage(key, value) {
   return true;
 }
 
-function readSavedIds() {
-  try {
-    const savedIds = JSON.parse(readStorage("atlasvowSaved", "[]"));
-    return Array.isArray(savedIds) ? savedIds : [];
-  } catch (error) {
-    return [];
-  }
-}
-
 const state = {
   mode: "featured",
-  saved: new Set(readSavedIds()),
   selectedMembers: [],
 };
 
@@ -155,14 +145,61 @@ function uniqueValues(values) {
     });
 }
 
+const profileTagRules = {
+  maxCount: 6,
+  maxTagUnits: 10,
+  maxTotalUnits: 44,
+};
+
+function getTagCharUnits(char) {
+  if (/\s/.test(char)) return 0;
+  return /[^\u0000-\u00ff]/.test(char) ? 2 : 1;
+}
+
+function getTagDisplayUnits(value) {
+  return [...String(value || "")].reduce((total, char) => total + getTagCharUnits(char), 0);
+}
+
+function trimTagToDisplay(value) {
+  const text = String(value || "").trim();
+  if (getTagDisplayUnits(text) <= profileTagRules.maxTagUnits) return text;
+
+  let output = "";
+  let units = getTagCharUnits("…");
+  for (const char of text) {
+    const nextUnits = getTagCharUnits(char);
+    if (units + nextUnits > profileTagRules.maxTagUnits) break;
+    output += char;
+    units += nextUnits;
+  }
+  return `${output.trim()}…`;
+}
+
+function normalizeProfileTags(values) {
+  const tags = uniqueValues(uniqueValues(values).map(trimTagToDisplay));
+  const selected = [];
+  let usedUnits = 0;
+
+  for (const tag of tags) {
+    const tagUnits = getTagDisplayUnits(tag);
+    if (selected.length >= profileTagRules.maxCount) break;
+    if (usedUnits + tagUnits > profileTagRules.maxTotalUnits) continue;
+    selected.push(tag);
+    usedUnits += tagUnits;
+  }
+
+  return selected;
+}
+
 function buildAutoTags(profile) {
-  return uniqueValues([
+  return normalizeProfileTags([
     profile.education,
     profile.occupation,
     profile.faith,
     profile.smoking,
+    formatChildren(profile.childrenCount),
     profile.housing,
-  ]).slice(0, 4);
+  ]);
 }
 
 function sentenceFromParts(parts) {
@@ -199,6 +236,22 @@ function normalizeQuote(value) {
   return String(value || "").replace(/\s+/g, " ").trim();
 }
 
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function removeLeadingProfileName(profile, value) {
+  let text = String(value || "").trim();
+  const names = uniqueValues([profile.cnName, profile.name]);
+
+  for (const name of names) {
+    const pattern = new RegExp(`^${escapeRegExp(name)}\\s*[，,。:：-]?\\s*`);
+    text = text.replace(pattern, "").trim();
+  }
+
+  return text;
+}
+
 function hashString(value) {
   return String(value || "").split("").reduce((hash, character) => {
     return (hash * 31 + character.charCodeAt(0)) >>> 0;
@@ -221,10 +274,9 @@ function getStableQuote(profile, usedQuotes) {
 }
 
 function buildProfileDescription(profile) {
-  const displayName = profile.cnName || profile.name || "该会员";
   const location = [profile.country, profile.stateRegion, profile.city].filter(Boolean).join("");
   const intro = sentenceFromParts([
-    location ? `${displayName} 现居${location}` : displayName,
+    location ? `现居${location}` : "",
     formatEducation(profile.education),
     formatOccupation(profile.occupation),
   ]);
@@ -298,7 +350,7 @@ function mapMember(member, usedQuotes = new Set()) {
     isNew: Boolean(member.is_new),
     image: getMemberPhotoUrl(primaryPhotoPath),
     photoUrls: photoPaths.map(getMemberPhotoUrl).filter(Boolean),
-    tags: normalizeArray(member.tags),
+    tags: normalizeProfileTags(normalizeArray(member.tags)),
     quote: member.quote || "",
     about: member.about || "",
   };
@@ -349,10 +401,6 @@ async function fetchMembers() {
 
   const usedQuotes = new Set();
   return data.map((member) => mapMember(member, usedQuotes));
-}
-
-function persistSaved() {
-  writeStorage("atlasvowSaved", JSON.stringify([...state.saved]));
 }
 
 async function createAppointment(payload) {
@@ -484,13 +532,12 @@ async function loadProfiles() {
 }
 
 function createCardMarkup(profile) {
-  const saved = state.saved.has(profile.id);
   const profileId = escapeHtml(profile.id);
   const profileName = escapeHtml(profile.cnName);
   const age = escapeHtml(profile.age);
   const location = escapeHtml(getLocationLabel(profile) || profile.country);
   const intent = escapeHtml(profile.intent);
-  const tagsMarkup = profile.tags.slice(0, 4).map((tag) => `<span>${escapeHtml(tag)}</span>`).join("");
+  const tagsMarkup = profile.tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("");
   const scoreMarkup =
     profile.score === null
       ? ""
@@ -515,12 +562,9 @@ function createCardMarkup(profile) {
       <div class="profile-body">
         <div class="profile-topline">
           <div class="profile-heading">
-            <h3><span>${profileName}</span><span>${age}</span></h3>
+            <h3><span class="profile-name">${profileName}</span><span class="profile-age">${age}</span></h3>
             <p class="profile-meta"><span>${location}</span><span>${intent}</span></p>
           </div>
-          <button class="favorite-button ${saved ? "is-saved" : ""}" type="button" data-save="${profileId}" aria-label="${saved ? "取消收藏" : "收藏"}${profileName}">
-            <i data-lucide="heart"></i>
-          </button>
         </div>
         <div class="tag-list">
           ${tagsMarkup}
@@ -528,13 +572,13 @@ function createCardMarkup(profile) {
         ${compatibilityMarkup}
         <p class="profile-quote">${escapeHtml(profile.quote)}</p>
         <div class="profile-actions">
-          <button type="button" data-open="${profileId}">
+          <button class="profile-action-primary" type="button" data-open="${profileId}">
             <i data-lucide="user-round"></i>
-            资料
+            <span>资料</span>
           </button>
-          <button class="secondary" type="button" data-intro="${profileId}">
+          <button class="profile-action-secondary" type="button" data-intro="${profileId}">
             <i data-lucide="message-circle"></i>
-            介绍
+            <span>介绍</span>
           </button>
         </div>
       </div>
@@ -549,6 +593,15 @@ function openProfile(profileId) {
   const photos = [...new Set([profile.image, ...profile.photoUrls].filter(Boolean))];
   const activePhoto = photos[0] || "";
   const activePhotoAlt = `${profile.cnName}的会员照片`;
+  const profileAbout = removeLeadingProfileName(profile, profile.about);
+  const statusLabel = profile.verified ? "已核验" : "顾问复核中";
+  const dialogTagsMarkup = profile.tags.length
+    ? `
+        <div class="dialog-tags" aria-label="会员标签">
+          ${profile.tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}
+        </div>
+      `
+    : "";
   const scoreMarkup =
     profile.score === null
       ? ""
@@ -589,12 +642,20 @@ function openProfile(profileId) {
         ${carouselMarkup}
       </div>
       <div class="dialog-details">
-        <div>
-          <p class="eyebrow">${escapeHtml(location)}</p>
+        <div class="dialog-hero">
+          <p class="dialog-place">
+            <i data-lucide="map-pin"></i>
+            <span>${escapeHtml(location)}</span>
+          </p>
           <h2 id="dialogName">${escapeHtml(profile.cnName)}</h2>
-          <p>${escapeHtml(profile.name)} · ${escapeHtml(profile.age)} 岁 · ${escapeHtml(profile.intent)}</p>
+          <div class="dialog-summary" aria-label="会员概览">
+            <span>${escapeHtml(profile.age)} 岁</span>
+            <span>${escapeHtml(profile.intent)}</span>
+            <span>${escapeHtml(statusLabel)}</span>
+          </div>
+          ${dialogTagsMarkup}
         </div>
-        <p>${escapeHtml(profile.about)}</p>
+        <p class="dialog-about">${escapeHtml(profileAbout)}</p>
         <div class="fact-grid">
           <div>
             <span>教育</span>
@@ -636,17 +697,6 @@ function openProfile(profileId) {
             <span>未来居住地</span>
             <strong>${escapeHtml(getDisplayValue(profile.relocation))}</strong>
           </div>
-          <div>
-            <span>资料状态</span>
-            <strong>${profile.verified ? "视频与证件已核验" : "顾问复核中"}</strong>
-          </div>
-          <div>
-            <span>适配标签</span>
-            <strong>${escapeHtml(getDisplayValue(profile.tags[0]))}</strong>
-          </div>
-        </div>
-        <div class="tag-list">
-          ${profile.tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}
         </div>
         <button class="dialog-action" type="button" data-intro="${escapeHtml(profile.id)}">
           <i data-lucide="calendar-plus"></i>
@@ -767,21 +817,8 @@ ageRange.addEventListener("input", updateAgeFilter);
 ageRange.addEventListener("change", updateAgeFilter);
 
 profileGrid.addEventListener("click", (event) => {
-  const saveButton = event.target.closest("[data-save]");
   const openButton = event.target.closest("[data-open]");
   const introButton = event.target.closest("[data-intro]");
-
-  if (saveButton) {
-    const id = saveButton.dataset.save;
-    if (state.saved.has(id)) {
-      state.saved.delete(id);
-    } else {
-      state.saved.add(id);
-    }
-    persistSaved();
-    renderProfiles();
-    return;
-  }
 
   if (openButton) {
     openProfile(openButton.dataset.open);
