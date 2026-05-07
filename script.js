@@ -1,4 +1,6 @@
 let profiles = [];
+let dialogSwipeState = null;
+let suppressDialogVisualClick = false;
 
 function readStorage(key, fallback) {
   try {
@@ -595,6 +597,7 @@ function openProfile(profileId) {
   const activePhotoAlt = `${profile.cnName}的会员照片`;
   const profileAbout = removeLeadingProfileName(profile, profile.about);
   const statusLabel = profile.verified ? "已核验" : "顾问复核中";
+  const photoCountLabel = photos.length ? `1 / ${photos.length}` : "暂无照片";
   const dialogTagsMarkup = profile.tags.length
     ? `
         <div class="dialog-tags" aria-label="会员标签">
@@ -609,22 +612,37 @@ function openProfile(profileId) {
   const carouselMarkup =
     photos.length > 1
       ? `
-        <div class="dialog-carousel" aria-label="${escapeHtml(profile.cnName)}照片轮播">
-          ${photos
-            .map(
-              (photoUrl, index) => `
-                <button
-                  class="dialog-thumb ${index === 0 ? "is-active" : ""}"
-                  type="button"
-                  data-photo="${escapeHtml(photoUrl)}"
-                  data-photo-alt="${escapeHtml(profile.cnName)}照片 ${index + 1}"
-                  aria-label="查看第 ${index + 1} 张照片"
-                >
-                  <img src="${escapeHtml(photoUrl)}" alt="" loading="lazy" />
-                </button>
-              `
-            )
-            .join("")}
+        <div class="dialog-photo-nav" aria-label="照片切换">
+          <button class="dialog-photo-step" type="button" data-photo-step="-1" aria-label="上一张照片">
+            <i data-lucide="chevron-left"></i>
+          </button>
+          <button class="dialog-photo-step" type="button" data-photo-step="1" aria-label="下一张照片">
+            <i data-lucide="chevron-right"></i>
+          </button>
+        </div>
+        <button class="dialog-gallery-toggle" type="button" data-gallery-toggle aria-expanded="false" aria-controls="dialogCarousel">
+          <i data-lucide="images"></i>
+          <span>查看照片</span>
+        </button>
+        <div class="dialog-carousel" id="dialogCarousel" aria-label="${escapeHtml(profile.cnName)}照片轮播">
+          <div class="dialog-carousel-track">
+            ${photos
+              .map(
+                (photoUrl, index) => `
+                  <button
+                    class="dialog-thumb ${index === 0 ? "is-active" : ""}"
+                    type="button"
+                    data-photo="${escapeHtml(photoUrl)}"
+                    data-photo-alt="${escapeHtml(profile.cnName)}照片 ${index + 1}"
+                    data-photo-index="${index + 1}"
+                    aria-label="查看第 ${index + 1} 张照片"
+                  >
+                    <img src="${escapeHtml(photoUrl)}" alt="" loading="lazy" />
+                  </button>
+                `
+              )
+              .join("")}
+          </div>
         </div>
       `
       : "";
@@ -634,9 +652,12 @@ function openProfile(profileId) {
 
   dialogContent.innerHTML = `
     <div class="dialog-profile">
-      <div class="dialog-visual">
+      <div class="dialog-visual ${photos.length > 1 ? "has-carousel" : ""}">
         <div class="dialog-photo-stage">
           ${photoMarkup}
+          <div class="dialog-photo-meta">
+            <strong id="dialogPhotoCount">${escapeHtml(photoCountLabel)}</strong>
+          </div>
           ${scoreMarkup}
         </div>
         ${carouselMarkup}
@@ -712,15 +733,91 @@ function openProfile(profileId) {
   activateIcons();
 }
 
-function switchDialogPhoto(button) {
+function setDialogPhoto(button) {
   const mainPhoto = dialog.querySelector("#dialogMainPhoto");
   if (!mainPhoto) return;
 
   mainPhoto.src = button.dataset.photo;
   mainPhoto.alt = button.dataset.photoAlt || mainPhoto.alt;
+  const photoCount = dialog.querySelector("#dialogPhotoCount");
+  if (photoCount && button.dataset.photoIndex) {
+    photoCount.textContent = `${button.dataset.photoIndex} / ${dialog.querySelectorAll(".dialog-thumb").length}`;
+  }
   dialog
     .querySelectorAll(".dialog-thumb")
     .forEach((item) => item.classList.toggle("is-active", item === button));
+  if (button.closest(".dialog-visual")?.classList.contains("is-gallery-open")) {
+    button.scrollIntoView({ block: "nearest", inline: "center" });
+  }
+}
+
+function switchDialogPhoto(button) {
+  setDialogPhoto(button);
+}
+
+function navigateDialogPhoto(step) {
+  const thumbs = [...dialog.querySelectorAll(".dialog-thumb")];
+  if (thumbs.length < 2) return;
+
+  const activeIndex = Math.max(0, thumbs.findIndex((item) => item.classList.contains("is-active")));
+  const nextIndex = (activeIndex + step + thumbs.length) % thumbs.length;
+  setDialogPhoto(thumbs[nextIndex]);
+}
+
+function toggleDialogGallery() {
+  const visual = dialog.querySelector(".dialog-visual");
+  const toggle = dialog.querySelector("[data-gallery-toggle]");
+  if (!visual || !toggle) return;
+
+  const isOpen = visual.classList.toggle("is-gallery-open");
+  toggle.setAttribute("aria-expanded", String(isOpen));
+  toggle.querySelector("span").textContent = isOpen ? "收起照片" : "查看照片";
+}
+
+function closeDialogGallery() {
+  const visual = dialog.querySelector(".dialog-visual");
+  const toggle = dialog.querySelector("[data-gallery-toggle]");
+  if (!visual || !toggle || !visual.classList.contains("is-gallery-open")) return;
+
+  visual.classList.remove("is-gallery-open");
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.querySelector("span").textContent = "查看照片";
+}
+
+function startDialogPhotoSwipe(event) {
+  if (event.button !== undefined && event.button !== 0) return;
+  if (event.target.closest("button, .dialog-carousel")) return;
+  const stage = event.target.closest(".dialog-photo-stage");
+  if (!stage || dialog.querySelectorAll(".dialog-thumb").length < 2) return;
+
+  dialogSwipeState = {
+    pointerId: event.pointerId,
+    startX: event.clientX,
+    startY: event.clientY,
+  };
+  stage.setPointerCapture?.(event.pointerId);
+}
+
+function endDialogPhotoSwipe(event) {
+  if (!dialogSwipeState || dialogSwipeState.pointerId !== event.pointerId) return;
+
+  const deltaX = event.clientX - dialogSwipeState.startX;
+  const deltaY = event.clientY - dialogSwipeState.startY;
+  const isSwipe = Math.abs(deltaX) > 48 && Math.abs(deltaX) > Math.abs(deltaY) * 1.35;
+
+  if (isSwipe) {
+    navigateDialogPhoto(deltaX < 0 ? 1 : -1);
+    suppressDialogVisualClick = true;
+    window.setTimeout(() => {
+      suppressDialogVisualClick = false;
+    }, 250);
+  }
+
+  dialogSwipeState = null;
+}
+
+function cancelDialogPhotoSwipe() {
+  dialogSwipeState = null;
 }
 
 function getAppointmentMemberLabel(member) {
@@ -831,10 +928,31 @@ profileGrid.addEventListener("click", (event) => {
 });
 
 dialog.addEventListener("click", (event) => {
+  if (suppressDialogVisualClick && event.target.closest(".dialog-visual")) {
+    suppressDialogVisualClick = false;
+    return;
+  }
+
+  const galleryToggle = event.target.closest("[data-gallery-toggle]");
+  if (galleryToggle) {
+    toggleDialogGallery();
+    return;
+  }
+
+  const photoStep = event.target.closest("[data-photo-step]");
+  if (photoStep) {
+    navigateDialogPhoto(Number(photoStep.dataset.photoStep));
+    return;
+  }
+
   const photoButton = event.target.closest("[data-photo]");
   if (photoButton) {
     switchDialogPhoto(photoButton);
     return;
+  }
+
+  if (event.target.closest(".dialog-visual")) {
+    closeDialogGallery();
   }
 
   const introButton = event.target.closest("[data-intro]");
@@ -842,6 +960,10 @@ dialog.addEventListener("click", (event) => {
     requestIntro(introButton.dataset.intro);
   }
 });
+
+dialog.addEventListener("pointerdown", startDialogPhotoSwipe);
+dialog.addEventListener("pointerup", endDialogPhotoSwipe);
+dialog.addEventListener("pointercancel", cancelDialogPhotoSwipe);
 
 function allowsDialogScroll(target) {
   return target instanceof Element && Boolean(target.closest(".dialog-details, .dialog-carousel"));

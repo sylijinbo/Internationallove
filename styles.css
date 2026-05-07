@@ -470,31 +470,64 @@ input[type="range"] {
 }
 
 .segmented-control {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
-  width: min(460px, 100%);
-  min-height: 42px;
-  margin: 18px 0 12px;
-  padding: 4px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--segment-bg);
+  display: inline-flex;
+  align-items: center;
+  gap: 26px;
+  width: auto;
+  min-height: 0;
+  margin: 14px 0 16px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .segmented-control button {
+  position: relative;
   min-width: 0;
+  min-height: 38px;
+  padding: 0 2px;
   border: 0;
-  border-radius: 6px;
+  border-radius: 0;
   background: transparent;
   color: var(--muted);
-  font-weight: 800;
+  font-size: 15px;
+  font-weight: 900;
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.segmented-control button::after {
+  content: "";
+  position: absolute;
+  right: 12%;
+  bottom: 0;
+  left: 12%;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--teal), var(--coral));
+  opacity: 0;
+  transform: translateY(5px) scaleX(0.4);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.segmented-control button:hover {
+  color: var(--ink);
+  transform: translateY(-1px);
 }
 
 .segmented-control button.is-active {
-  background: var(--control-bg);
   color: var(--teal-dark);
-  box-shadow: 0 4px 14px rgba(var(--shadow-rgb), 0.12);
+  background: transparent;
+  box-shadow: none;
+}
+
+.segmented-control button.is-active::after {
+  opacity: 1;
+  transform: translateY(0) scaleX(1);
 }
 
 .result-line {
@@ -1079,37 +1112,61 @@ body.dialog-lock {
 
 .dialog-visual {
   position: relative;
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
+  display: block;
   min-height: 0;
   overflow: hidden;
   border-right: 1px solid var(--line);
-  background: var(--soft-bg);
+  background:
+    linear-gradient(135deg, rgba(var(--shadow-rgb), 0.2), rgba(var(--brand-rgb), 0.12)),
+    var(--soft-bg);
   overscroll-behavior: contain;
 }
 
 .dialog-photo-stage {
   position: relative;
   display: grid;
+  height: 100%;
   min-height: 0;
   place-items: center;
   overflow: hidden;
   background:
     linear-gradient(135deg, rgba(var(--brand-rgb), 0.08), transparent 42%),
     var(--soft-bg);
+  cursor: grab;
   overscroll-behavior: contain;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.dialog-photo-stage:active {
+  cursor: grabbing;
+}
+
+.dialog-photo-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(180deg, rgba(var(--shadow-rgb), 0.36), transparent 26%),
+    linear-gradient(0deg, rgba(var(--shadow-rgb), 0.58), transparent 40%);
+  pointer-events: none;
 }
 
 .dialog-photo-stage img {
   position: absolute;
   inset: 0;
+  z-index: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center;
+  -webkit-user-drag: none;
 }
 
 .dialog-photo-empty {
+  position: relative;
+  z-index: 2;
   display: grid;
   width: 100%;
   height: 100%;
@@ -1118,21 +1175,167 @@ body.dialog-lock {
   font-weight: 800;
 }
 
+.dialog-photo-meta {
+  position: absolute;
+  top: 20px;
+  right: 22px;
+  left: 22px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 2px 12px rgba(var(--shadow-rgb), 0.44);
+}
+
+.dialog-photo-meta strong {
+  display: inline-flex;
+  align-items: center;
+  min-height: 0;
+  padding: 0;
+  color: inherit;
+  font-size: 13px;
+  font-weight: 900;
+}
+
 .dialog-visual .score-pill {
+  z-index: 2;
+  top: auto;
   right: 18px;
   bottom: 18px;
 }
 
-.dialog-carousel {
+.dialog-visual.has-carousel .score-pill {
+  bottom: 76px;
+}
+
+.dialog-photo-nav {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  left: 16px;
+  z-index: 3;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.dialog-photo-step {
   display: grid;
-  grid-auto-columns: 74px;
+  width: 42px;
+  height: 54px;
+  place-items: center;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.88);
+  filter: drop-shadow(0 2px 8px rgba(var(--shadow-rgb), 0.5));
+  opacity: 0.76;
+  pointer-events: auto;
+  transition:
+    color 0.2s ease,
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.dialog-photo-step:hover {
+  color: #fff;
+  opacity: 1;
+  transform: scale(1.08);
+}
+
+.dialog-photo-step svg {
+  display: block;
+  width: 34px;
+  height: 34px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.9;
+}
+
+.dialog-gallery-toggle {
+  position: absolute;
+  right: 22px;
+  bottom: 22px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.94);
+  font-size: 13px;
+  font-weight: 900;
+  text-shadow: 0 2px 12px rgba(var(--shadow-rgb), 0.62);
+  box-shadow: none;
+  backdrop-filter: none;
+  transition:
+    color 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.dialog-gallery-toggle:hover {
+  color: #fff;
+  opacity: 1;
+}
+
+.dialog-gallery-toggle svg {
+  display: block;
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.dialog-carousel {
+  position: absolute;
+  right: 18px;
+  bottom: 70px;
+  left: 18px;
+  z-index: 3;
+  overflow: hidden;
+  padding: 8px;
+  border-radius: 8px;
+  opacity: 0;
+  transform: translateY(calc(100% + 18px));
+  transition:
+    opacity 0.24s ease,
+    transform 0.28s ease;
+  pointer-events: none;
+}
+
+.dialog-visual.is-gallery-open .dialog-carousel {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.dialog-visual.is-gallery-open .dialog-gallery-toggle {
+  color: rgba(255, 255, 255, 0.94);
+}
+
+.dialog-carousel-track {
+  display: grid;
+  grid-auto-columns: 70px;
   grid-auto-flow: column;
   gap: 8px;
-  min-height: 94px;
   overflow-x: auto;
-  padding: 10px;
-  border-top: 1px solid var(--line);
-  background: var(--control-bg);
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.46);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.68);
+  box-shadow: 0 16px 34px rgba(var(--shadow-rgb), 0.18);
+  backdrop-filter: blur(16px);
   overscroll-behavior: contain;
 }
 
@@ -1141,7 +1344,7 @@ body.dialog-lock {
   aspect-ratio: 1 / 1;
   overflow: hidden;
   padding: 0;
-  border: 2px solid transparent;
+  border: 2px solid rgba(255, 255, 255, 0.7);
   border-radius: 8px;
   background: var(--soft-bg);
 }
@@ -1461,8 +1664,52 @@ body.dialog-lock {
     border-bottom: 1px solid var(--line);
   }
 
+  .dialog-photo-meta {
+    top: 14px;
+    right: 14px;
+    left: 14px;
+  }
+
+  .dialog-photo-meta strong {
+    font-size: 12px;
+  }
+
+  .dialog-photo-nav {
+    right: 10px;
+    left: 10px;
+  }
+
+  .dialog-photo-step {
+    width: 40px;
+    height: 52px;
+  }
+
+  .dialog-photo-step svg {
+    width: 32px;
+    height: 32px;
+  }
+
   .dialog-carousel {
+    right: 12px;
+    bottom: 60px;
+    left: 12px;
+    padding: 6px;
+  }
+
+  .dialog-gallery-toggle {
+    right: 16px;
+    bottom: 16px;
+    min-height: 0;
+    padding: 8px 0 8px 8px;
+  }
+
+  .dialog-carousel-track {
     grid-auto-columns: 62px;
+    padding: 6px;
+  }
+
+  .dialog-visual.has-carousel .score-pill {
+    bottom: 64px;
   }
 
   .dialog-details {
