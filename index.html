@@ -12,16 +12,7 @@
     <link rel="preconnect" href="https://images.unsplash.com" />
     <link rel="preconnect" href="https://unpkg.com" />
     <script>
-      (() => {
-        try {
-          const savedTheme = localStorage.getItem("atlasvowTheme");
-          const availableThemes = ["default", "pink", "ocean"];
-          document.documentElement.dataset.theme =
-            availableThemes.includes(savedTheme) ? savedTheme : "pink";
-        } catch (error) {
-          document.documentElement.dataset.theme = "pink";
-        }
-      })();
+      document.documentElement.dataset.theme = "pink";
     </script>
     <link rel="stylesheet" href="styles.css" />
   </head>
@@ -41,22 +32,6 @@
         <a href="#stories">故事</a>
       </nav>
       <div class="header-controls">
-        <label class="theme-picker" aria-label="切换网站皮肤">
-          <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24">
-            <circle cx="13.5" cy="6.5" r="0.5" fill="currentColor"></circle>
-            <circle cx="17.5" cy="10.5" r="0.5" fill="currentColor"></circle>
-            <circle cx="8.5" cy="7.5" r="0.5" fill="currentColor"></circle>
-            <circle cx="6.5" cy="12.5" r="0.5" fill="currentColor"></circle>
-            <path
-              d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.5-.7 1.5-1.5 0-.4-.2-.8-.4-1.1-.3-.4-.5-.8-.5-1.3 0-1.1.9-2 2-2h1.9c3 0 5.5-2.5 5.5-5.5C22 5.9 17.5 2 12 2z"
-            ></path>
-          </svg>
-          <select id="themeSelect">
-            <option value="default">青绿</option>
-            <option value="pink" selected>粉色</option>
-            <option value="ocean">深海</option>
-          </select>
-        </label>
         <a class="header-action" href="#consult">
           <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24">
             <path d="M8 2v4"></path>
@@ -217,30 +192,38 @@
             </ol>
           </div>
 
-          <form id="consult" class="consult-form" novalidate>
+          <form id="consult" class="consult-form" autocomplete="off" novalidate>
             <h3>预约初谈</h3>
             <label>
-              <span>称呼</span>
-              <input
-                type="text"
-                name="name"
-                placeholder="你的称呼"
-                data-required-message="请填写你的称呼。"
-                aria-describedby="nameError"
-                required
-              />
+              <span class="field-label">称呼</span>
+              <span class="field-control">
+                <i data-lucide="user-round"></i>
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="请输入称呼"
+                  autocomplete="off"
+                  data-required-message="请填写你的称呼。"
+                  aria-describedby="nameError"
+                  required
+                />
+              </span>
               <small class="field-error" id="nameError" data-error-for="name" aria-live="polite"></small>
             </label>
             <label>
-              <span>联系方式</span>
-              <input
-                type="text"
-                name="contact"
-                placeholder="邮箱或手机"
-                data-required-message="请填写联系方式。"
-                aria-describedby="contactError"
-                required
-              />
+              <span class="field-label">联系方式</span>
+              <span class="field-control">
+                <i data-lucide="mail"></i>
+                <input
+                  type="text"
+                  name="contact"
+                  placeholder="邮箱或手机"
+                  autocomplete="off"
+                  data-required-message="请填写联系方式。"
+                  aria-describedby="contactError"
+                  required
+                />
+              </span>
               <small
                 class="field-error"
                 id="contactError"

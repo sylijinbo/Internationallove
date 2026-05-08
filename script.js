@@ -2,23 +2,6 @@ let profiles = [];
 let dialogSwipeState = null;
 let suppressDialogVisualClick = false;
 
-function readStorage(key, fallback) {
-  try {
-    return localStorage.getItem(key) || fallback;
-  } catch (error) {
-    return fallback;
-  }
-}
-
-function writeStorage(key, value) {
-  try {
-    localStorage.setItem(key, value);
-  } catch (error) {
-    return false;
-  }
-  return true;
-}
-
 const state = {
   mode: "featured",
   selectedMembers: [],
@@ -33,10 +16,8 @@ const dialogContent = document.querySelector("#dialogContent");
 const selectedMembersList = document.querySelector("#selectedMembersList");
 const selectedMemberCount = document.querySelector("#selectedMemberCount");
 const formMessage = document.querySelector("#formMessage");
-const themeSelect = document.querySelector("#themeSelect");
-const defaultTheme = "pink";
-const availableThemes = new Set(["default", "pink", "ocean"]);
 const maxAppointmentMembers = 3;
+const compactDialogMedia = "(max-width: 840px), (max-height: 760px) and (max-width: 1180px)";
 const supabaseConfig = {
   url: "https://hgglkxizcwazqenqmfrm.supabase.co",
   publishableKey: "sb_publishable_dEZ6qglLvXD_BvMQ09aTQw_oaOi5ZU1",
@@ -457,16 +438,6 @@ function getAppointmentErrorMessage(error) {
   return `预约提交失败：${message}`;
 }
 
-function applyTheme(theme, shouldPersist = true) {
-  const nextTheme = availableThemes.has(theme) ? theme : defaultTheme;
-  document.documentElement.dataset.theme = nextTheme;
-  themeSelect.value = nextTheme;
-
-  if (shouldPersist) {
-    writeStorage("atlasvowTheme", nextTheme);
-  }
-}
-
 function matchesFilters(profile) {
   const modeMatch =
     state.mode === "featured" ||
@@ -647,7 +618,15 @@ function openProfile(profileId) {
       `
       : "";
   const photoMarkup = activePhoto
-    ? `<img id="dialogMainPhoto" src="${escapeHtml(activePhoto)}" alt="${escapeHtml(activePhotoAlt)}" />`
+    ? `
+        <img class="dialog-photo-backdrop-img" src="${escapeHtml(activePhoto)}" alt="" aria-hidden="true" />
+        <img
+          class="dialog-photo-main-img"
+          id="dialogMainPhoto"
+          src="${escapeHtml(activePhoto)}"
+          alt="${escapeHtml(activePhotoAlt)}"
+        />
+      `
     : `<div class="dialog-photo-empty">暂无会员照片</div>`;
 
   dialogContent.innerHTML = `
@@ -737,8 +716,14 @@ function setDialogPhoto(button) {
   const mainPhoto = dialog.querySelector("#dialogMainPhoto");
   if (!mainPhoto) return;
 
-  mainPhoto.src = button.dataset.photo;
+  const nextPhoto = button.dataset.photo || "";
+  const backdropPhoto = dialog.querySelector(".dialog-photo-backdrop-img");
+
+  mainPhoto.src = nextPhoto;
   mainPhoto.alt = button.dataset.photoAlt || mainPhoto.alt;
+  if (backdropPhoto) {
+    backdropPhoto.src = nextPhoto;
+  }
   const photoCount = dialog.querySelector("#dialogPhotoCount");
   if (photoCount && button.dataset.photoIndex) {
     photoCount.textContent = `${button.dataset.photoIndex} / ${dialog.querySelectorAll(".dialog-thumb").length}`;
@@ -795,7 +780,9 @@ function startDialogPhotoSwipe(event) {
     startX: event.clientX,
     startY: event.clientY,
   };
-  stage.setPointerCapture?.(event.pointerId);
+  if (!window.matchMedia(compactDialogMedia).matches) {
+    stage.setPointerCapture?.(event.pointerId);
+  }
 }
 
 function endDialogPhotoSwipe(event) {
@@ -975,10 +962,6 @@ document.querySelectorAll(".segmented-control button").forEach((button) => {
   });
 });
 
-themeSelect.addEventListener("change", () => {
-  applyTheme(themeSelect.value);
-});
-
 Object.values(controls).forEach((control) => {
   control.addEventListener("input", renderProfiles);
   control.addEventListener("change", renderProfiles);
@@ -1045,7 +1028,12 @@ dialog.addEventListener("pointerup", endDialogPhotoSwipe);
 dialog.addEventListener("pointercancel", cancelDialogPhotoSwipe);
 
 function allowsDialogScroll(target) {
-  return target instanceof Element && Boolean(target.closest(".dialog-details, .dialog-carousel"));
+  if (!(target instanceof Element)) return false;
+  if (window.matchMedia(compactDialogMedia).matches) {
+    return Boolean(target.closest(".dialog-profile"));
+  }
+
+  return Boolean(target.closest(".dialog-details, .dialog-carousel"));
 }
 
 dialog.addEventListener(
@@ -1167,7 +1155,6 @@ window.addEventListener("load", () => {
   activateIcons();
 });
 
-applyTheme(document.documentElement.dataset.theme, false);
 ageValue.textContent = ageRange.value;
 renderSelectedMembers();
 loadProfiles();
