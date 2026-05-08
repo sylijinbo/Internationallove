@@ -1929,6 +1929,61 @@ body.dialog-lock {
     aspect-ratio: 1 / 1;
   }
 
+  .profile-body {
+    flex: 0 0 auto;
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .profile-topline h3 {
+    font-size: 18px;
+    line-height: 1.18;
+  }
+
+  .profile-meta {
+    margin-top: 2px;
+    font-size: 12px;
+  }
+
+  .tag-list {
+    gap: 5px;
+  }
+
+  .tag-list span {
+    padding: 3px 7px;
+    font-size: 11px;
+  }
+
+  .compatibility {
+    gap: 4px;
+  }
+
+  .compatibility span {
+    font-size: 11px;
+  }
+
+  .bar {
+    height: 6px;
+  }
+
+  .profile-quote {
+    min-height: 0;
+    font-size: 12px;
+    line-height: 1.45;
+    -webkit-line-clamp: 2;
+  }
+
+  .profile-actions {
+    gap: 8px;
+    margin-top: 2px;
+    padding-top: 2px;
+  }
+
+  .profile-actions button {
+    min-height: 38px;
+    font-size: 13px;
+  }
+
   .section-heading,
   .site-footer {
     align-items: start;
