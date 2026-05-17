@@ -2059,13 +2059,14 @@ body.dialog-lock {
   }
 
   .dialog-close {
-    top: 18px;
-    right: 18px;
-    z-index: 5;
-    width: 36px;
-    height: 36px;
+    position: fixed;
+    top: max(14px, env(safe-area-inset-top));
+    right: max(14px, env(safe-area-inset-right));
+    z-index: 10;
+    width: 40px;
+    height: 40px;
     border-color: rgba(255, 255, 255, 0.5);
-    background: rgba(255, 255, 255, 0.78);
+    background: rgba(255, 255, 255, 0.86);
     color: rgba(var(--shadow-rgb), 0.72);
   }
 
@@ -2089,7 +2090,27 @@ body.dialog-lock {
   }
 
   .dialog-photo-nav {
-    display: none;
+    top: calc(min(clamp(320px, 100vw, 460px), 72dvh) / 2);
+    right: max(10px, env(safe-area-inset-right));
+    left: max(10px, env(safe-area-inset-left));
+    z-index: 6;
+    display: flex;
+  }
+
+  .dialog-photo-step {
+    width: 40px;
+    height: 48px;
+    border-radius: 999px;
+    background: rgba(var(--shadow-rgb), 0.28);
+    color: #fff;
+    opacity: 0.94;
+    filter: none;
+    backdrop-filter: blur(12px);
+  }
+
+  .dialog-photo-step svg {
+    width: 28px;
+    height: 28px;
   }
 
   .dialog-gallery-toggle,
@@ -2219,13 +2240,14 @@ body.dialog-lock {
   }
 
   .dialog-close {
-    top: 18px;
-    right: 18px;
-    z-index: 5;
-    width: 36px;
-    height: 36px;
+    position: fixed;
+    top: max(14px, env(safe-area-inset-top));
+    right: max(14px, env(safe-area-inset-right));
+    z-index: 10;
+    width: 40px;
+    height: 40px;
     border-color: rgba(255, 255, 255, 0.5);
-    background: rgba(255, 255, 255, 0.78);
+    background: rgba(255, 255, 255, 0.86);
     color: rgba(var(--shadow-rgb), 0.72);
   }
 
@@ -2248,7 +2270,30 @@ body.dialog-lock {
     backdrop-filter: blur(12px);
   }
 
-  .dialog-photo-nav,
+  .dialog-photo-nav {
+    top: calc(min(clamp(320px, 100vw, 520px), 72dvh) / 2);
+    right: max(10px, env(safe-area-inset-right));
+    left: max(10px, env(safe-area-inset-left));
+    z-index: 6;
+    display: flex;
+  }
+
+  .dialog-photo-step {
+    width: 40px;
+    height: 48px;
+    border-radius: 999px;
+    background: rgba(var(--shadow-rgb), 0.28);
+    color: #fff;
+    opacity: 0.94;
+    filter: none;
+    backdrop-filter: blur(12px);
+  }
+
+  .dialog-photo-step svg {
+    width: 28px;
+    height: 28px;
+  }
+
   .dialog-gallery-toggle,
   .dialog-carousel {
     display: none;

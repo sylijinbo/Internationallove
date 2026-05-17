@@ -1,5 +1,6 @@
 let profiles = [];
 let dialogSwipeState = null;
+let dialogPullCloseState = null;
 let suppressDialogVisualClick = false;
 
 const state = {
@@ -807,6 +808,42 @@ function cancelDialogPhotoSwipe() {
   dialogSwipeState = null;
 }
 
+function isCompactDialog() {
+  return window.matchMedia(compactDialogMedia).matches;
+}
+
+function startDialogPullClose(event) {
+  if (event.button !== undefined && event.button !== 0) return;
+  if (!dialog.open || !isCompactDialog()) return;
+  if (event.target.closest("button, input, select, textarea, .dialog-carousel")) return;
+  if (!event.target.closest(".dialog-profile")) return;
+  if (dialog.scrollTop > 2) return;
+
+  dialogPullCloseState = {
+    pointerId: event.pointerId,
+    startX: event.clientX,
+    startY: event.clientY,
+  };
+}
+
+function endDialogPullClose(event) {
+  if (!dialogPullCloseState || dialogPullCloseState.pointerId !== event.pointerId) return;
+
+  const deltaX = event.clientX - dialogPullCloseState.startX;
+  const deltaY = event.clientY - dialogPullCloseState.startY;
+  const isPullDown = deltaY > 110 && deltaY > Math.abs(deltaX) * 1.35;
+
+  dialogPullCloseState = null;
+
+  if (isPullDown && dialog.open && isCompactDialog() && dialog.scrollTop <= 8) {
+    dialog.close();
+  }
+}
+
+function cancelDialogPullClose() {
+  dialogPullCloseState = null;
+}
+
 function getAppointmentMemberLabel(member) {
   return [member.name, member.location].filter(Boolean).join(" · ");
 }
@@ -1026,6 +1063,9 @@ dialog.addEventListener("click", (event) => {
 dialog.addEventListener("pointerdown", startDialogPhotoSwipe);
 dialog.addEventListener("pointerup", endDialogPhotoSwipe);
 dialog.addEventListener("pointercancel", cancelDialogPhotoSwipe);
+dialog.addEventListener("pointerdown", startDialogPullClose);
+dialog.addEventListener("pointerup", endDialogPullClose);
+dialog.addEventListener("pointercancel", cancelDialogPullClose);
 
 function allowsDialogScroll(target) {
   if (!(target instanceof Element)) return false;
@@ -1057,6 +1097,8 @@ dialog.addEventListener(
 );
 
 dialog.addEventListener("close", () => {
+  cancelDialogPhotoSwipe();
+  cancelDialogPullClose();
   document.documentElement.classList.remove("dialog-lock");
   document.body.classList.remove("dialog-lock");
 });
